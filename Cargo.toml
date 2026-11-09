@@ -1,0 +1,30 @@
+[workspace]
+members = [".", "orion-ingest", "metal-check", "preprocess"]
+resolver = "2"
+
+[package]
+name = "panelimp"
+version = "0.1.0"
+edition = "2021"
+description = "Panel imputation for perturbation screens: designed panels, ridge imputation, INFO and out-of-reference scores"
+
+[[bin]]
+name = "panelimp"
+path = "src/main.rs"
+
+[[bin]]
+name = "perturb-impute"
+path = "src/bin/perturb_impute.rs"
+
+[dependencies]
+anyhow = "1"
+rayon = "1"
+bytemuck = "1"
+memmap2 = "0.9"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+
+panic = "abort"

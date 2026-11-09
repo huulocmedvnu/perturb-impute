@@ -1,0 +1,11 @@
+[package]
+name = "preprocess"
+version = "0.1.0"
+edition = "2021"
+description = "Pseudobulk means over all cells and two halves, then z-scores against control cells"
+
+[dependencies]
+anyhow = "1"
+rayon = "1"
+memmap2 = "0.9"
+bytemuck = "1"

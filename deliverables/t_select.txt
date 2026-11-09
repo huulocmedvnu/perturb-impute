@@ -1,0 +1,19 @@
+select: 500 genes (standard) from 9866 perturbations x 7094 genes in 4.9s; variance explained 0.990
+        5.01 real        28.91 user         1.24 sys
+          3352199168  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              204804  page reclaims
+                   0  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   2  voluntary context switches
+               67910  involuntary context switches
+        119937379106  instructions retired
+         94359586898  cycles elapsed
+          3349465920  peak memory footprint

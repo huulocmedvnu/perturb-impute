@@ -1,0 +1,15 @@
+[package]
+name = "orion-ingest"
+version = "0.1.0"
+edition = "2021"
+description = "Streaming pseudobulk summariser for X-Atlas/Orion parquet shards (sparse, nnz-only)"
+
+[dependencies]
+anyhow = "1"
+rayon = "1"
+bytemuck = "1"
+arrow-array = "53"
+arrow-schema = "53"
+parquet = { version = "53", default-features = false, features = ["arrow", "snap", "zstd", "lz4", "flate2"] }
+flate2 = "1"
+rustc-hash = "2"
