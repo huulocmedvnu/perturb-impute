@@ -19,7 +19,7 @@ make figures    # regenerates Figs. 2 to 8 and Fig. S1 from source_data/ into ou
 make all        # the four steps in sequence
 ```
 
-No atlas has to be downloaded for these steps. Requirements are listed in `environment/README.md`: Rust 1.99.0 (pinned in `rust-toolchain.toml`), Python 3.12, and on Linux the OpenBLAS development package (`libopenblas-dev`). On macOS the linear algebra runs through Apple Accelerate, which is part of the system.
+No atlas has to be downloaded for these steps. Requirements are listed in `environment/README.md`: Rust 1.99.0 (pinned in `rust-toolchain.toml`), Python 3.12, and on Linux the OpenBLAS development package (`libopenblas-dev`) and, for the figures, `libexpat1`. On macOS the linear algebra runs through Apple Accelerate, which is part of the system.
 
 `make verify` prints one line per number with the value in the manuscript, the recomputed value and its source. Most checks recompute medians, proportions and tests from the per-perturbation tables in `source_data/tables/`. Checks marked `summary` read summaries written by the Rust tool, and checks marked `json` read `source_data/numbers.json` for values that need the full atlas (number of programs, noise tails).
 
