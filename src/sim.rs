@@ -230,6 +230,8 @@ pub fn run(a: &[String], z: &Z, fold: &[i64], group: &[i64], excl: &HashSet<(usi
         for (j, &(b, t, o)) in cv.iter().enumerate() { writeln!(w, "{}\t{b:.6e}\t{t:.6e}\t{o:.6e}\t{:.6e}", z.genes[j], gs[gmap[j]] / libsum)?; }
     }
     let mut w = BufWriter::new(std::fs::File::create(format!("{out}.sim.tsv"))?);
+    let mut wden = BufWriter::new(std::fs::File::create(format!("{out}.den.tsv"))?);
+    writeln!(wden, "fold\tq\tpert\tn_de\tr_den\trp_den\ttp_den\tdisc_den\trp_dir\ttp_dir\tdisc_dir")?;
     writeln!(w, "fold\tpanel\tassay\tq\tpert\tn_cells\tshare\trate\talpha\tn_de\tr_imp\trp_imp\ttp_imp\tdisc_imp\tr_dir\trp_dir\ttp_dir\tdisc_dir")?;
     let inner_split = |refs: &[usize]| -> (Vec<usize>, Vec<usize>) {
         let key = |i: usize| -> u64 { let k = if group[i] >= 0 { group[i] as u64 } else { 1_000_000 + i as u64 }; (k.wrapping_mul(0x9E3779B97F4A7C15) >> 32) % 10 };
@@ -287,6 +289,18 @@ pub fn run(a: &[String], z: &Z, fold: &[i64], group: &[i64], excl: &HashSet<(usi
             let (zw, _) = zhalves(&c, &grp, &sw, g);
             let dir: Vec<f64> = (0..nq).flat_map(|s| u.iter().map(move |&j| (s, j))).map(|(s, j)| zw[s * g + j]).collect();
             let dm: Vec<(f64, f64, usize, usize, usize)> = (0..nq).into_par_iter().map(|s| metrics(&dir[s * nu..(s + 1) * nu], &truth[s * nu..(s + 1) * nu], &basis)).collect();
+            // control: the thinned whole transcriptome projected on the 160 leading reference programs
+            {
+                let nk = *DEN_K.iter().max().unwrap();
+                let v160: Vec<f64> = (0..g).flat_map(|j| gr.vk[j * nk..j * nk + 160].to_vec()).collect();
+                let full: Vec<f64> = zw[..nq * g].to_vec();
+                let den = la::gemm(false, true, nq, g, 160, &la::gemm(false, false, nq, 160, g, &full, &v160), &v160);
+                for s in 0..nq {
+                    let d: Vec<f64> = u.iter().map(|&j| den[s * g + j]).collect();
+                    let m = metrics(&d, &truth[s * nu..(s + 1) * nu], &basis);
+                    writeln!(wden, "{f}\t{q}\t{}\t{}\t{:.6}\t{:.6}\t{}\t{}\t{:.6}\t{}\t{}", c.groups[qg[s]].0, m.2, m.0, m.1, m.3, m.4, dm[s].1, dm[s].3, dm[s].4)?;
+                }
+            }
             for (pk, p) in ps.iter().enumerate() {
                 let k = p.genes.len();
                 let share: f64 = p.genes.iter().map(|&j| gs[gmap[j]]).sum::<f64>() / libsum;
