@@ -105,7 +105,7 @@ N["rank_knn"] = {"ridge": float(k.ridge_spa.median()), "knn": float(k.knn_spa.me
 m = pd.read_csv(O + "gwps.meta.tsv", sep="\t"); gg = pd.read_csv(O + "gwps.genes.tsv", sep="\t")
 Z = np.fromfile(O + "gwps.z.f32", np.float32).reshape(3, len(m), len(gg)); dd = (Z[1] - Z[2]) / np.sqrt(2)
 N["noise"] = {"sd": float(dd.std()), "tail4": float((np.abs(dd) > 4).mean()), "normal_tail4": 6.334e-5, "n_genes_universe": len(gg), "n_perts_gwps": len(m)}
-NJ = "./docs/manuscript/numbers.json" if os.path.isdir("./docs/manuscript") else "./out/numbers.json"
+NJ = "./source_data/numbers.json"
 N["mp"] = json.load(open(NJ)).get("mp", {}) if os.path.exists(NJ) else {}
 json.dump(N, open(NJ, "w"), indent=1)
 for ct in CT: print(ct, {k: (round(v, 3) if isinstance(v, float) else v) for k, v in N[ct].items() if k.startswith(("n_", "ratio_greedy_500", "ratio_hvgresp_500", "ratio_designed_500", "ratio_l1000", "oor", "info", "r_", "share"))})

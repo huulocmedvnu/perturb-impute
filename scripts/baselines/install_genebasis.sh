@@ -12,9 +12,9 @@ remotes::install_github("MarioniLab/geneBasisR", ref = "1e81fa70ab4457466706314e
 library(geneBasisR); cat("geneBasisR", as.character(packageVersion("geneBasisR")), "\n")'
 # geneBasisR fails with BiocNeighbors 2.x (1-gene selection -> vector -> queryKNN signature error, also in the
 # package's own example). Private library with the Bioc 3.19 versions, used only by genebasis_run.R:
-mkdir -p ~/Downloads/panelimp/ext/baselines/rlib_bn1
+mkdir -p ./ext/baselines/rlib_bn1
 /opt/homebrew/bin/Rscript -e '
-lib <- path.expand("~/Downloads/panelimp/ext/baselines/rlib_bn1")
+lib <- path.expand("./ext/baselines/rlib_bn1")
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 if (!requireNamespace("RcppHNSW", quietly = TRUE)) install.packages("RcppHNSW")
 install.packages("https://bioconductor.org/packages/3.19/bioc/src/contrib/BiocNeighbors_1.22.0.tar.gz", repos = NULL, type = "source", lib = lib)

@@ -5,7 +5,7 @@ Output ext/baselines/hvg.tsv (fold = all). Usage: venv/bin/python hvg_scanpy.py"
 import os, sys, time, numpy as np, pandas as pd, scipy.sparse as sp, anndata as ad, scanpy as sc, skmisc
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import ROOT, OUT
-D = os.path.expanduser("~/Downloads/coexsc/data/k562ess")
+D = os.environ.get("K562ESS_CACHE", "data/k562ess")
 SIZES = [200, 500, 680]
 
 cache_genes = [l.rstrip("\n") for l in open(f"{D}/genes.txt")]

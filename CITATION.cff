@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the manuscript below."
+title: "perturb-impute: gene panels and transcriptome-wide imputation for CRISPR perturbation screens"
+type: software
+license: MIT
+repository-code: "https://github.com/huulocmedvnu/perturb-impute"
+authors:
+  - family-names: Tran
+    given-names: Thai Huu Loc
+    orcid: "https://orcid.org/0009-0009-1810-010X"
+  - family-names: Nguyen
+    given-names: Thi Van
+    orcid: "https://orcid.org/0009-0009-4255-2480"
+preferred-citation:
+  type: unpublished
+  title: "Imputing transcriptome-wide CRISPR perturbation responses from small gene panels"
+  authors:
+    - family-names: Tran
+      given-names: Thai Huu Loc
+    - family-names: Nguyen
+      given-names: Thi Van
+  year: 2026
+  notes: "Manuscript submitted"

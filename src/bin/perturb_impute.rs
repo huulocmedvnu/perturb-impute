@@ -7,6 +7,7 @@
 //!                                [--noise FILE --budget 0.02] --out model.bin
 //!   perturb-impute impute        --model model.bin --input panel_matrix.tsv --out-dir DIR
 //!   perturb-impute validate      --model model.bin --input-z PREFIX --out per_gene.tsv
+//!   perturb-impute project       --ref REF --input matrix.tsv [--programs 160] --out projected.tsv
 //!
 //! REF is either a z-score prefix (PREFIX.meta.tsv, PREFIX.genes.tsv, PREFIX.z.f32 with layers
 //! all cells / half 0 / half 1) or a TSV matrix (perturbations x genes, first column = name).
@@ -388,6 +389,44 @@ fn cmd_validate(a: &Args) -> Result<()> {
     Ok(())
 }
 
+/// Orthogonal projection of profiles (n x g, row-major) on the k leading eigenvectors of the
+/// second-moment matrix of the reference profiles (the reference programs).
+fn project(reference: &[f64], n_ref: usize, g: usize, x: &[f64], n: usize, k: usize) -> Result<Vec<f64>> {
+    let c = la::gram(reference, n_ref, g);
+    // exact eigenvectors for small gene sets, block subspace iteration for transcriptome-wide ones
+    let (v, _) = if g <= 1500 { la::top_eig(&c, g, k)? } else { la::top_eig_sub(&c, g, k, 40)? };
+    Ok(la::gemm(false, true, n, g, k, &la::gemm(false, false, n, k, g, x, &v), &v))
+}
+
+/// project: whole-transcriptome profiles denoised by projection on the reference programs.
+/// Genes are matched by name; reference genes absent from the input enter as zero.
+fn cmd_project(a: &Args) -> Result<()> {
+    let t0 = Instant::now();
+    let r = Prof::load(&a.req("--ref")?)?;
+    let x = Prof::load(&a.req("--input")?)?;
+    let k: usize = a.get("--programs").map(|v| v.parse()).transpose()?.unwrap_or(160);
+    let (n, g) = (r.perts.len(), r.genes.len());
+    if k == 0 || k > g.min(n) { bail!("--programs {k} must be between 1 and {}", g.min(n)) }
+    let y = r.mat(0, &(0..n).collect::<Vec<_>>(), &(0..g).collect::<Vec<_>>());
+    let gi: HashMap<&str, usize> = x.genes.iter().enumerate().map(|(i, s)| (s.as_str(), i)).collect();
+    let (nx, gx) = (x.perts.len(), x.genes.len());
+    let mut m = vec![0.0; nx * g];
+    let mut matched = 0;
+    for (j, name) in r.genes.iter().enumerate() {
+        if let Some(&c) = gi.get(name.as_str()) {
+            matched += 1;
+            for i in 0..nx { let v = x.layers[0][i * gx + c]; if v.is_finite() { m[i * g + j] = v as f64; } }
+        }
+    }
+    if matched < g / 2 { bail!("only {matched} of {g} reference genes found in the input") }
+    let p = project(&y, n, g, &m, nx, k)?;
+    let mut w = BufWriter::new(std::fs::File::create(a.req("--out")?)?);
+    writeln!(w, "perturbation\t{}", r.genes.join("\t"))?;
+    for i in 0..nx { writeln!(w, "{}\t{}", x.perts[i], p[i * g..(i + 1) * g].iter().map(|v| format!("{:.5}", v)).collect::<Vec<_>>().join("\t"))?; }
+    eprintln!("project: {nx} profiles, {matched} of {g} reference genes matched, {k} programs, {:.1}s", t0.elapsed().as_secs_f64());
+    Ok(())
+}
+
 const HELP: &str = "perturb-impute: gene panels and transcriptome-wide imputation for CRISPR perturbation screens
 
   select        --ref REF --out panel.tsv [--panel-size 500] [--mode standard|low-budget]
@@ -396,6 +435,8 @@ const HELP: &str = "perturb-impute: gene panels and transcriptome-wide imputatio
                 [--noise gene_cv2.tsv --budget 0.02]
   impute        --model model.bin --input matrix.tsv --out-dir DIR      (or --input-z PREFIX [--layer 0])
   validate      --model model.bin --input-z PREFIX --out per_gene_r.tsv [--layer 1 --truth-layer 2]
+  project       --ref REF --input matrix.tsv --out projected.tsv [--programs 160]
+                (whole-transcriptome profiles projected on the leading reference programs)
 
 REF: z-score prefix (PREFIX.meta.tsv, PREFIX.genes.tsv, PREFIX.z.f32; layers all cells, half 0, half 1)
      or a TSV/CSV matrix with perturbations in rows, genes in columns and names in the first column.";
@@ -408,6 +449,7 @@ fn main() -> Result<()> {
         Some("fit-reference") => cmd_fit(&a),
         Some("impute") => cmd_impute(&a),
         Some("validate") => cmd_validate(&a),
+        Some("project") => cmd_project(&a),
         _ => { println!("{HELP}"); Ok(()) }
     }
 }
@@ -425,6 +467,19 @@ mod tests {
         let l = Model::load(p.to_str().unwrap()).unwrap();
         assert_eq!((l.n_ref, l.alpha, l.budget, &l.panel, &l.targets), (7, 0.1, 0.02, &m.panel, &m.targets));
         assert_eq!((&l.css, &l.cus, &l.extra, &l.scale, &l.info, &l.slope, &l.errvar), (&m.css, &m.cus, &m.extra, &m.scale, &m.info, &m.slope, &m.errvar));
+    }
+    /// projection on reference programs returns profiles inside the program space unchanged and removes the rest
+    #[test]
+    fn projection_keeps_program_space() {
+        // reference: 6 profiles spanned by two programs over 4 genes
+        let (p1, p2) = ([1.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, -1.0]);
+        let coef = [(3.0, 0.5), (-2.0, 1.0), (1.0, -4.0), (0.5, 2.0), (-1.5, -1.0), (2.5, 3.0)];
+        let y: Vec<f64> = coef.iter().flat_map(|&(a, b)| (0..4).map(move |j| a * p1[j] + b * p2[j])).collect();
+        let inside = [2.0, 2.0, -1.0, 1.0];
+        let outside = [1.0, -1.0, 1.0, 1.0];
+        let x: Vec<f64> = inside.iter().chain(outside.iter()).copied().collect();
+        let p = project(&y, 6, 4, &x, 2, 2).unwrap();
+        for j in 0..4 { assert!((p[j] - inside[j]).abs() < 1e-8, "inside {j}: {}", p[j]); assert!(p[4 + j].abs() < 1e-8, "outside {j}: {}", p[4 + j]); }
     }
     /// weights solved on a subset equal the ridge solution written out directly
     #[test]

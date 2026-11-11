@@ -1,0 +1,8 @@
+# Python 3.12; used by scripts/make_figures.py, scripts/make_flowchart.py and scripts/verify_manuscript_numbers.py
+numpy==2.0.2
+pandas==2.2.3
+scipy==1.13.1
+plotly==5.24.1
+kaleido==0.2.1
+# only for scripts/ms_numbers.py (collects numbers.json from the pipeline outputs)
+scikit-learn==1.6.0

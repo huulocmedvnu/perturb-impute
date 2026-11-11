@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "orion-ingest", "metal-check", "preprocess"]
+members = [".", "orion-ingest", "preprocess"]
 resolver = "2"
 
 [package]

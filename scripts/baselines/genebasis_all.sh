@@ -1,7 +1,7 @@
 #!/bin/bash
 # Runs geneBasisR gene_search(n_genes_total = 680) for folds 0-4 and -9 on 3,000 subsampled reference profiles.
 # Usage: genebasis_all.sh [PARALLEL=2] [FOLDS...]
-cd ~/Downloads/panelimp/ext/baselines
+cd "$(dirname "$0")/../.."/ext/baselines
 P=${1:-2}; shift; FOLDS=${@:-"0 1 2 3 4 -9"}
 python3 ../../scripts/baselines/genebasis_export.py --sub 3000
 mkdir -p genebasis_parts logs

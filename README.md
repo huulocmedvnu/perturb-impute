@@ -2,110 +2,149 @@
 
 Gene panels and transcriptome-wide imputation for CRISPR perturbation screens.
 
-A targeted readout (hybridisation capture, targeted Perturb-seq, probe panels, MERFISH or Perturb-FISH) measures a few hundred genes per cell. `perturb-impute` chooses those genes on a reference perturbation atlas, fits an imputation model on the atlas, and returns the transcriptome-wide response of every perturbation in a new targeted screen, with a reliability score per gene (INFO), a local false sign rate per imputed change (lfsr) and an out-of-reference score per perturbation (OOR).
+## Overview
 
-Written in Rust. Linear algebra runs through Apple Accelerate (macOS). No Python or R is needed.
+A targeted readout (hybridisation capture, targeted Perturb-seq, probe panels, MERFISH or Perturb-FISH) measures a few hundred genes per cell. `perturb-impute` chooses those genes on a reference perturbation atlas by greedy minimum mean squared error (MMSE) selection, with a UMI-cost variant for low sequencing budgets, and imputes all other genes by ridge regression fitted on the atlas. Each imputed gene carries an INFO score, a calibration slope and a local false sign rate, and each perturbation an out-of-reference score. For whole-transcriptome screens, `perturb-impute project` projects profiles on the leading programs of the reference atlas, which removes counting noise with the same reference information.
 
-## Install
+The repository holds the command-line tool, the analysis pipeline of the manuscript "Imputing transcriptome-wide CRISPR perturbation responses from small gene panels", the released panels and models, and the source data behind every figure.
 
-```sh
-cargo build --release          # binary: target/release/perturb-impute
-```
-
-Tested with Rust 1.99 on macOS (Accelerate). The build takes about 30 seconds.
-
-## Quick start
-
-Design a probe panel (wet lab), from the K562 genome-wide reference:
+## Quick start for reviewers
 
 ```sh
-perturb-impute select --ref k562_gwps --panel-size 500 --mode standard \
-  --umi-fraction control_umi_fraction_k562.tsv --gene-ids gene_ids.tsv --out panel.tsv
+pip install -r environment/requirements.txt    # numpy, pandas, scipy, plotly, kaleido
+make build      # compiles the Rust binaries (about 40 s on first build)
+make test       # unit tests and the command-line workflow on toy data (under 10 s after the build)
+make verify     # recomputes 128 numbers of the manuscript from source_data/ (a few seconds)
+make figures    # regenerates Figs. 2 to 8 and Fig. S1 from source_data/ into output/ (about 10 s)
+make all        # the four steps in sequence
 ```
 
-Ready-made panels are in `deliverables/Table_S2_Panels.tsv`, so this step is only needed for another reference or panel size.
+No atlas has to be downloaded for these steps. Requirements are listed in `environment/README.md`: Rust 1.99.0 (pinned in `rust-toolchain.toml`), Python 3.12, and on Linux the OpenBLAS development package (`libopenblas-dev`). On macOS the linear algebra runs through Apple Accelerate, which is part of the system.
 
-Impute a targeted screen after sequencing, with a pre-trained model:
+`make verify` prints one line per number with the value in the manuscript, the recomputed value and its source. Most checks recompute medians, proportions and tests from the per-perturbation tables in `source_data/tables/`. Checks marked `summary` read summaries written by the Rust tool, and checks marked `json` read `source_data/numbers.json` for values that need the full atlas (number of programs, noise tails).
 
-```sh
-perturb-impute impute --model deliverables/models/k562_500_standard.bin \
-  --input my_screen_panel_zscores.tsv --out-dir imputed/
-```
+## Repository layout
 
-Fit your own model on a reference atlas:
-
-```sh
-perturb-impute fit-reference --ref k562_gwps --panel panel.tsv --groups k562_groups.tsv --out model.bin
-```
-
-## Which panel
-
-| Sequencing budget of the targeted assay (reads per cell relative to a whole-transcriptome experiment) | Panel | Model |
-|---|---|---|
-| 10% or more | `standard_500` (greedy minimum mean squared error) | `k562_500_standard.bin` |
-| 2% to 10% | `low-budget_500` (greedy with a penalty on the UMI share of each gene, exponent 0.5) | `k562_500_lowbudget.bin` (noise weights set for 2% of the reads) |
-
-The standard panel holds 52% of the UMIs of a K562 control cell and the low-budget panel 6%. At 2% of the reads, the low-budget panel recovered more of the specific response than the L1000 landmarks in a read-thinning simulation (manuscript, Fig. 5). For another budget, refit with `--noise control_cv2_k562.tsv --budget 0.05`.
-
-## Input formats
-
-- **Reference (`--ref`)**: either a z-score prefix (`PREFIX.meta.tsv` with perturbation names in the first column, `PREFIX.genes.tsv` with gene symbols in the first column, `PREFIX.z.f32` with float32 values of shape layers x perturbations x genes, layers = all cells, half 0, half 1), or a TSV/CSV matrix with perturbations in rows, genes in columns and names in the first column. With the three-layer format, INFO and calibration use half 0 to predict half 1 of held-out perturbations. With a single layer they are in-sample on the held-out perturbations.
-- **Screen to impute (`--input`)**: TSV/CSV, one row per perturbation, one column per panel gene (gene symbols in the header). Values are z-scores of the pseudobulk difference from control cells, computed as in the reference (see Methods of the manuscript). Missing panel genes are allowed: the weights are solved on the genes present. `deliverables/e2e_test/example_panel_input.tsv` shows the format.
-- **`--groups`**: perturbation and group (for example CORUM complex clusters). The 10% inner holdout is drawn by group, so that members of one complex are not split between training and holdout. Without groups, INFO is higher (median 0.194 against 0.171 for the K562 standard model) because related perturbations sit on both sides.
-
-## Outputs of `impute`
-
-| File | Content |
+| Path | Content |
 |---|---|
-| `imputed_zscores.tsv` | perturbations x imputed genes, calibrated z-scores |
+| `src/bin/perturb_impute.rs` | command-line tool `perturb-impute` |
+| `src/` | analysis pipeline `panelimp` (cross-validation, DE calls, simulation, paired libraries, pooled references, transferred profiles) and `la.rs` (BLAS and LAPACK bindings) |
+| `preprocess/`, `orion-ingest/` | pseudobulk z-scores from cell caches, and streaming ingest of the X-Atlas/Orion Parquet files |
+| `panels/` | released panels and per-gene tables (Additional files 3 to 5 of the manuscript) |
+| `models/` | pre-trained models and the inputs needed to rebuild them (`models/README.md`) |
+| `source_data/` | per-perturbation tables, summaries and `numbers.json` behind the figures and tables |
+| `scripts/` | `verify_manuscript_numbers.py`, `make_figures.py`, `make_flowchart.py`, `make_source_data.py`, `ms_numbers.py`, and the drivers of the full pipeline in `scripts/pipeline/` and `scripts/baselines/` |
+| `tests/` | `cli.rs` (end-to-end test), `data/` (toy data, 0.7 MB), `smoke.sh`, and `validation/` (comparisons of the Rust code with independent numpy implementations, which need the full outputs) |
+| `environment/` | pinned Python packages and notes on the toolchain |
+| `ext/` | CORUM complexes, L1000 landmark list, gene universe, and the baseline panels (highly variable genes, geneBasis) |
+
+## Using `perturb-impute`
+
+Inputs are plain matrices: one row per perturbation, one column per gene, names in the first column, values as z-scores of the pseudobulk difference from control cells (Methods of the manuscript). A reference can also be given as a binary z-score prefix (`PREFIX.meta.tsv`, `PREFIX.genes.tsv`, `PREFIX.z.f32`).
+
+1. Select a panel on a reference atlas. The standard panel is for 10% or more of the reads of a whole-transcriptome experiment, the low-budget panel for less.
+
+```sh
+perturb-impute select --ref reference.tsv --panel-size 500 --mode standard --out panel_standard.tsv
+perturb-impute select --ref reference.tsv --panel-size 500 --mode low-budget \
+  --umi-fraction models/inputs/control_umi_fraction_k562.tsv --out panel_low_budget.tsv
+```
+
+The panels of the manuscript are ready in `panels/` (`standard_500.tsv`, `low-budget_500.tsv`, 200-gene versions, and `Table_S2_Panels.tsv` with all four).
+
+2. Fit a reference model. `--groups` keeps the members of a complex together when INFO scores and calibration are estimated.
+
+```sh
+perturb-impute fit-reference --ref reference.tsv --panel panel_standard.tsv \
+  --groups models/inputs/k562_groups.tsv --out model.bin
+# low budget: noise weights for the planned share of reads
+perturb-impute fit-reference --ref reference.tsv --panel panel_low_budget.tsv --groups models/inputs/k562_groups.tsv \
+  --noise models/inputs/control_cv2_k562.tsv --budget 0.02 --out model_low_budget.bin
+```
+
+3. Impute a targeted screen and keep the reliable genes.
+
+```sh
+perturb-impute impute --model models/k562_500_standard.bin --input my_screen_panel_zscores.tsv --out-dir imputed/
+# genes with an INFO score of 0.3 or more
+awk -F'\t' 'NR > 1 && $2 >= 0.3 {print $1}' imputed/gene_info.tsv > imputed/genes_info_0.3.txt
+```
+
+| Output | Content |
+|---|---|
+| `imputed_zscores.tsv` | perturbations by imputed genes, calibrated z-scores |
 | `imputed_lfsr.tsv` | local false sign rate of each imputed change |
-| `perturbation_qc.tsv` | out-of-reference score, panel norm, panel genes used |
-| `gene_info.tsv` | INFO, calibration slope and error variance of each imputed gene |
+| `gene_info.tsv` | INFO score, calibration slope and error variance of each imputed gene |
+| `perturbation_qc.tsv` | out-of-reference score, panel norm, number of panel genes used |
 
-## Filtering and calling DE genes
+Missing panel genes are allowed: the weights are solved again on the genes present.
 
-- **Genes**: keep imputed genes with INFO of 0.3 or more for gene-level analyses. In the K562 standard model, 804 of 6,594 imputed genes pass, and their median observed correlation in RPE1 cells was 0.46, against 0.38 for INFO of 0.2 or more (2,494 genes) and 0.28 below 0.3. Analyses of programs, clusters of perturbations and signatures can use all genes.
-- **DE calls**: call an imputed gene DE when its lfsr is below 0.01, which bounds the probability that the sign of the change is wrong. In K562 cross-validation, the observed sign errors were 1.09 times the expected number. Outside the reference cell type, imputed changes were 13% to 18% smaller than measured changes, so effect sizes are conservative there.
-- **Perturbations**: the OOR score rises when a whole screen differs from the reference (median 0.14 in K562, 0.23 to 0.25 in RPE1, HepG2 and Jurkat cells). It does not identify single failing perturbations outside the reference cell type.
-- **Effect size ranking**: the ranking of DE genes by the size of their change is half as reliable as direct measurement. Add genes whose effect size matters to the panel.
+4. Project whole-transcriptome profiles on the reference programs.
 
-## Deliverables (`deliverables/`)
+```sh
+perturb-impute project --ref reference.tsv --input my_screen_all_genes.tsv --programs 160 --out projected.tsv
+```
 
-- `Table_S2_Panels.tsv`: standard and low-budget panels of 200 and 500 genes from the K562 genome-wide atlas (9,866 perturbations, 7,094 genes), in selection order, with Ensembl gene identifiers (GENCODE v44, and GENCODE v32 for symbols absent from v44), control-cell UMI fractions and the variance explained under the reference model.
-- `Table_S3_Gene_INFO_Scores.tsv`: for all 7,094 genes and both 500-gene panels, the K562 INFO score, calibration slope and error variance from the grouped inner holdout, and the observed per-gene correlation in RPE1, HepG2 and Jurkat cells (half 0 imputed, half 1 measured, perturbations whose halves correlate at 0.2 or more). For HepG2 and Jurkat cells, imputation used the panel genes measured there (450 of 500 standard and 392 of 500 low-budget genes).
-- `models/k562_500_standard.bin`, `models/k562_500_lowbudget.bin`: pre-trained models (28.6 MB each).
-- `inputs/`: control-cell UMI fractions and squared coefficients of variation (K562 essential-gene screen), gene identifiers and perturbation groups.
+Guidance from the manuscript: use a panel with imputation at 5% or less of the reads of a whole-transcriptome experiment or for readouts limited to a few hundred genes. With more reads, sequence the whole transcriptome and project. Use imputed genes with INFO of 0.3 or more for gene-level analyses (804 of 6,594 genes for the standard K562 panel), and all genes for analyses of programs. The out-of-reference score indicates when a screen differs from the reference (median 0.14 in K562 cells, 0.23 to 0.25 in other cell lines). It does not identify single failing perturbations outside the reference cell line. Effect sizes outside the reference cell line were 13% to 18% smaller than measured ones.
 
-## Speed (MacBook Pro, M3 Pro, 18 GB)
+## Manuscript to code and source data
 
-| Step | Time |
+All paths are relative to the repository root. "pipeline" means the `panelimp` binary (`src/main.rs`), with the subcommand given.
+
+| Item | Source data | Generated by | Manuscript section |
+|---|---|---|---|
+| Fig. 1 | `source_data/numbers.json`, `real/cells.summary.tsv`, `xatlas/*_cv.txt`, `vcm/vcmsum.txt` | `scripts/make_flowchart.py` | Study design |
+| Fig. 2a, b | `numbers.json` (from `tables/cvg`, `trg`, `tr_hepg2`, `tr_jurkat` `.perts.tsv.gz`) | pipeline `cv --common --baselines`, `transfer`; `scripts/make_figures.py` | Panels chosen on perturbation responses |
+| Fig. 2c | `tables/cvg.perts.tsv.gz` | pipeline `cv`; `make_figures.py` | same |
+| Fig. 3a, c, d | `tables/cvm`, `trm_rpe1`, `trm_hepg2`, `trm_jurkat` `.perts.tsv.gz` | pipeline `cv`, `transfer`; `make_figures.py` | Imputation from 500 genes |
+| Fig. 3b | `numbers.json` (from `tables/*.genes.tsv.gz`) | same | same |
+| Fig. 3e | `example/mbtps2_fold1.tsv` | pipeline `example`; `make_figures.py` | same |
+| Fig. 4a to d | `numbers.json` (from `tables/de_*.dex.tsv.gz`, `tables/*.de.tsv.gz`) | pipeline `upg`, `de`; `make_figures.py` | Measured and imputed genes combined |
+| Fig. 4e | `numbers.json` (`rank_oracle`) | `scripts/pipeline/oracle_rank.py` | same |
+| Fig. 5a, b | `numbers.json` (`sim`, from `tables/simd.sim.tsv.gz`), `sim/denoised.tsv` (from `tables/simd.den.tsv.gz`) | pipeline `sim --upg2`; `scripts/sim_denoised.py`; `make_figures.py` | Read-thinning simulation |
+| Fig. 6a to d | `real/real.log`, `real/real.summary.tsv`, `real/cells.summary.tsv` (from `tables/paired.real.tsv.gz`, `paired.cells.tsv.gz`) | pipeline `mtx2cache`, `real`, `realcells`, `realsum`, `cellsum` (`scripts/pipeline/real.sh`); `make_figures.py` | Enriched library of the L1000 landmarks |
+| Fig. 7a, b | `xatlas/hct116_*.txt`, `xatlas/hek293t_*.txt`, `numbers.json` | `orion-ingest`, pipeline `cv`, `upg`, `cvsum` (`scripts/pipeline/xatlas_analysis.sh`, `xatlas_l1000.sh`); `make_figures.py` | Two independent atlases |
+| Fig. 7c | `xatlas/multi_panframe.txt` | pipeline `multi`, `multisum` (`scripts/pipeline/xatlas_multi_tf.sh`); `make_figures.py` | Pooled reference |
+| Fig. 8a to c | `vcm/vcmsum.txt` | pipeline `vcm`, `vcmsum`; `make_figures.py` | Transferred profiles |
+| Fig. S1 | `numbers.json` (`sim_budget`, from `tables/simb.sim.tsv.gz`) | pipeline `sim --design-budgets`; `make_figures.py` | Read-thinning simulation |
+| Table 1 | none (recommendations, with the evidence cited in the table) | | Discussion |
+| Table S1 | `numbers.json` (`rank_oracle`, `rank_knn`), `tables/cvk.knn.tsv.gz` | pipeline `cv` (neighbour copying), `upg`; `scripts/pipeline/oracle_rank.py` | Effect size ranking |
+| Table S2 (Additional file 3) | `panels/Table_S2_Panels.tsv` | `perturb-impute select` | Data availability |
+| Table S3 (Additional file 4) | `panels/Table_S3_Gene_INFO_Scores.tsv` | `perturb-impute fit-reference`, `validate` | Discussion |
+| Table S4 | `tables/de_k562_all`, `de_rpe1`, `de_hepg2`, `de_jurkat` `.dex.tsv.gz` | pipeline `upg` | DE calls |
+| Table S5 | `xatlas/*_high.txt`, `xatlas/multi_tf.txt`, `xatlas/multi_tf_test.txt` | pipeline `cv`, `multi` | Independent atlases |
+| Table S6 | not in `source_data/` (per-stratum counts of the DE runs) | pipeline `de --panel-size N [--same-cells]` | DE calls |
+| Table S7 | `vcm/vcmsum.txt` | pipeline `vcm`, `vcmsum` | Transferred profiles |
+| Table S8 | `real/real.summary.tsv`, `real/cells.summary.tsv` | pipeline `realsum`, `cellsum` | Enriched library |
+| Additional file 5 | `panels/xatlas/*.tsv` | `perturb-impute select` (`scripts/pipeline/xatlas_models.sh`) | Data availability |
+
+`scripts/make_source_data.py` writes `source_data/tables/` from the pipeline outputs, and `scripts/ms_numbers.py` writes `numbers.json`. File names in `tables/` are those of the pipeline outputs. Columns: `r_ceil` and `r_imp` are total correlations of the measured input half and of the imputed profile with the held-out half, `r_ceil_perp` and `r_imp_perp` the specific correlations, `r_den160_perp` the specific correlation of the profile projected on 160 programs, `oor` the out-of-reference score, `n_de`, `tp` and `disc` the numbers of DE genes, of calls with the correct sign and of calls with the opposite sign.
+
+## Full pipeline from the public atlases
+
+The steps below repeat the analyses from raw data. They need several tens of GB of free disk space (the working files of X-Atlas/Orion alone take 25 GB) and 18 GB of memory. On a MacBook Pro (M3 Pro, 18 GB), the simulation takes about 6 minutes, the paired libraries 4 minutes, and the ingest of the two X-Atlas/Orion atlases about 70 minutes plus the download.
+
+| Data | Source |
 |---|---|
-| `select`, 500 genes from 9,866 perturbations x 7,094 genes | 4.8 s |
-| `fit-reference` | 3.3 s |
-| `impute`, 2,393 perturbations | 1.3 s (0.11 s computation) |
+| K562 genome-wide, K562 essential and RPE1 screens (Replogle et al. 2022) | Figshare, https://doi.org/10.25452/figshare.plus.20029387 |
+| HepG2 and Jurkat screens (Nadig et al. 2025) | GEO GSE264667 |
+| Paired whole-transcriptome and L1000-enriched libraries (Replogle et al. 2020, samples exp7 and exp11) | GEO GSE146194 |
+| X-Atlas/Orion HCT116 and HEK293T | Hugging Face, `Xaira-Therapeutics/X-Atlas-Orion` (CC BY-NC-SA 4.0) |
+| CORUM complexes | https://mips.helmholtz-muenchen.de/corum (copy in `ext/corum_human.txt`) |
+| L1000 landmark genes | GEO GSE92742 gene annotation (list in `ext/l1000_landmarks.txt`) |
 
-## Validation
+1. Pseudobulk z-scores. `dosecurve cache <screen.h5ad> <cache_dir>` (https://github.com/huulocmedvnu/dosecurve) writes a sparse cell cache. `preprocess pb <cache_dir> <pb>` computes mean counts per 10,000 UMIs per perturbation over all cells and two alternating halves, and `preprocess z --pb <pb> --genes ext/universe.txt --out out/gwps` the z-scores against control cells.
+2. Folds. `panelimp folds` builds the cross-validation folds from the z-scores and CORUM (`out/folds.tsv`, `out/hub_excl.tsv`).
+3. Selectors, imputation and DE. `panelimp cv`, `transfer`, `de` and `upg`, with the baseline panels of `scripts/baselines/` (`ext/baselines/README.md`).
+4. Simulation. `panelimp sim --upg2` on the cell cache of the K562 essential-gene screen, then `scripts/sim_denoised.py`.
+5. Paired libraries. `scripts/pipeline/real.sh` after the two matrices of GSE146194 are placed in `ext/replogle2020/`.
+6. X-Atlas/Orion. `orion-ingest` and `scripts/pipeline/xatlas_*.sh`, then `panelimp multi` and `panelimp vcm`.
+7. Numbers and figures. `scripts/ms_numbers.py`, `scripts/make_source_data.py`, then `make verify figures`.
 
-`cargo test --release` runs the unit tests (model round trip, weights on a subset of panel genes, and checks of the analysis code against direct computations). `select` reproduces the greedy selection of the analysis pipeline gene for gene, and `validate` reproduces its per-gene correlations in RPE1 cells exactly.
+The usage of every pipeline subcommand is documented at the top of `src/main.rs`.
 
-## Reproducing the analyses
+## License and citation
 
-The analysis pipeline is the `panelimp` binary (`cargo build --release`, commands in `src/main.rs`) with helper scripts in `scripts/`:
+Code, the K562 models and the panels chosen on the K562 atlas: MIT (`LICENSE`). Panels and models derived from X-Atlas/Orion (`panels/xatlas/`, `models/xatlas/`): CC BY-NC-SA 4.0, the license of these data (`models/xatlas/README.md`).
 
-- Pseudobulk z-scores: `dosecurve cache <screen.h5ad> <cache_dir>` (https://github.com/huulocmedvnu/dosecurve) writes a cell cache, `preprocess pb <cache_dir> <pb>` computes mean CP10k per perturbation over all cells and two interleaved halves, and `preprocess z --pb <pb> --genes <genes.txt> --out <z>` computes z-scores against non-targeting control cells (crate `preprocess/`).
-- `panelimp folds` builds the complex-aware cross-validation folds from the z-scores and CORUM.
-- `panelimp mtx2cache`, `panelimp real` and `panelimp realcells` (driver `scripts/real.sh`) convert the paired whole-transcriptome and L1000-enriched libraries of GSE146194 (exp7, exp11) and compare the readouts; `realsum` and `cellsum` print the summaries.
-- `panelimp cv`, `panelimp de` and `panelimp sim` run panel selection with imputation, DE calls and the read-thinning simulation. `scripts/ms_numbers.py` collects the summary numbers.
-- `orion-ingest` and `orion/scripts/*.sh` process the X-Atlas/Orion HCT116 and HEK293T atlases. `panelimp multi` and `panelimp vcm` run the pooled-reference and cross-cell-line transfer analyses.
-- `scripts/baselines/` contains the highly variable gene and geneBasis baselines (see `ext/baselines/README.md`).
-- `tests/` compares the Rust code with independent numpy implementations on small subsets.
-
-Raw data: K562 and RPE1 screens from Figshare (https://doi.org/10.25452/figshare.plus.20029387), HepG2 and Jurkat screens from GEO (GSE264667), X-Atlas/Orion from Hugging Face (Xaira-Therapeutics/X-Atlas-Orion), CORUM complexes and the L1000 landmark list (GSE92742).
-
-## License
-
-Code: MIT (see `LICENSE`). The K562-derived panels and models in `deliverables/` are released under the same license. Panels and models derived from X-Atlas/Orion in `deliverables_xatlas/` follow the CC BY-NC-SA 4.0 license of these data (see `deliverables_xatlas/README.md`).
-
-## Citation
-
-Tran THL, Nguyen TV. Imputing transcriptome-wide CRISPR perturbation responses from small gene panels. Manuscript in preparation.
+Tran THL, Nguyen TV. Imputing transcriptome-wide CRISPR perturbation responses from small gene panels. Manuscript submitted. See `CITATION.cff`.

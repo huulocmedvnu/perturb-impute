@@ -1,7 +1,7 @@
 """Shared loader for baseline panel selection: reference sets identical to src/main.rs (line ~486).
 ref(f) = {i : fold[i] != f and (i, f) not in hub_excl}; transfer (f = -9) = all perturbations."""
 import os, numpy as np, pandas as pd
-ROOT = os.path.expanduser("~/Downloads/panelimp")
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 OUT = os.path.join(ROOT, "ext/baselines")
 
 def load():

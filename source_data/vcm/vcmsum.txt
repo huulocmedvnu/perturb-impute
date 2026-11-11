@@ -1,0 +1,100 @@
+== scope out (out: genes outside the panel, all: all genes)
+target   method              n    spec_r  recall  opp    rank   weak   mid    strong
+RPE1     direct               426 0.300   0.499   0.053  0.356  0.409  0.804  0.956
+RPE1     copy_single          426 0.111   0.123   0.344  0.105  0.094  0.205  0.370
+RPE1     copy_pooled          426 0.194   0.217   0.194  0.189  0.166  0.368  0.631
+RPE1     panel                426 0.112   0.354   0.068  0.095  0.307  0.510  0.602
+RPE1     panel+copy_single    426 0.123   0.355   0.067  0.113  0.308  0.514  0.610
+RPE1     panel+copy_pooled    426 0.177   0.373   0.057  0.164  0.321  0.544  0.669
+RPE1     panel_ls_copy_pooled  426 0.169   0.366   0.061  0.154  0.315  0.537  0.656
+HepG2    direct               213 0.294   0.412   0.099  0.257  0.326  0.703  0.939
+HepG2    copy_single          213 0.113   0.134   0.299  0.086  0.104  0.229  0.360
+HepG2    copy_pooled          213 0.192   0.233   0.145  0.147  0.186  0.376  0.612
+HepG2    panel                213 0.122   0.252   0.116  0.073  0.210  0.392  0.551
+HepG2    panel+copy_single    213 0.131   0.254   0.115  0.089  0.210  0.395  0.554
+HepG2    panel+copy_pooled    213 0.176   0.272   0.098  0.107  0.226  0.423  0.598
+HepG2    panel_ls_copy_pooled  213 0.173   0.270   0.099  0.107  0.224  0.420  0.593
+Jurkat   direct               187 0.271   0.287   0.126  0.258  0.223  0.582  0.881
+Jurkat   copy_single          187 0.155   0.144   0.234  0.145  0.111  0.284  0.534
+Jurkat   copy_pooled          187 0.226   0.175   0.177  0.148  0.137  0.340  0.632
+Jurkat   panel                187 0.144   0.201   0.108  0.100  0.168  0.347  0.557
+Jurkat   panel+copy_single    187 0.157   0.204   0.106  0.121  0.170  0.354  0.574
+Jurkat   panel+copy_pooled    187 0.204   0.217   0.096  0.150  0.179  0.386  0.636
+Jurkat   panel_ls_copy_pooled  187 0.204   0.218   0.095  0.153  0.180  0.387  0.635
+HCT116   direct               159 0.284   0.169   0.192  0.132  0.136  0.397  0.492
+HCT116   copy_single          159 0.114   0.075   0.344  0.086  0.055  0.209  0.324
+HCT116   copy_pooled          159 0.218   0.118   0.214  0.100  0.092  0.293  0.415
+HCT116   panel                159 0.133   0.059   0.237  0.036  0.053  0.099  0.131
+HCT116   panel+copy_single    159 0.135   0.059   0.237  0.036  0.053  0.100  0.133
+HCT116   panel+copy_pooled    159 0.143   0.061   0.233  0.071  0.054  0.108  0.154
+HCT116   panel_ls_copy_pooled  159 0.157   0.078   0.219  0.093  0.063  0.172  0.275
+HEK293T  direct                93 0.272   0.146   0.173  0.132  0.121  0.480  0.611
+HEK293T  copy_single           93 0.131   0.069   0.337  0.083  0.051  0.305  0.447
+HEK293T  copy_pooled           93 0.217   0.094   0.262  0.086  0.073  0.368  0.532
+HEK293T  panel                 93 0.140   0.059   0.198  0.022  0.053  0.146  0.201
+HEK293T  panel+copy_single     93 0.142   0.059   0.198  0.024  0.053  0.146  0.201
+HEK293T  panel+copy_pooled     93 0.149   0.060   0.196  0.030  0.053  0.152  0.222
+HEK293T  panel_ls_copy_pooled   93 0.158   0.065   0.192  0.062  0.055  0.188  0.317
+== scope all (out: genes outside the panel, all: all genes)
+target   method              n    spec_r  recall  opp    rank   weak   mid    strong
+RPE1     direct               626 0.327   0.579   0.037  0.491  0.460  0.859  0.971
+RPE1     copy_single          626 0.128   0.188   0.312  0.199  0.132  0.288  0.513
+RPE1     copy_pooled          626 0.204   0.290   0.176  0.273  0.208  0.447  0.718
+RPE1     panel                626 0.257   0.491   0.037  0.331  0.398  0.701  0.843
+RPE1     panel+copy_single    626 0.261   0.491   0.037  0.338  0.398  0.702  0.844
+RPE1     panel+copy_pooled    626 0.281   0.500   0.034  0.368  0.405  0.715  0.862
+RPE1     panel_ls_copy_pooled  626 0.276   0.499   0.035  0.362  0.404  0.714  0.859
+HepG2    direct               305 0.316   0.495   0.073  0.335  0.384  0.783  0.955
+HepG2    copy_single          305 0.133   0.208   0.258  0.166  0.153  0.336  0.522
+HepG2    copy_pooled          305 0.214   0.321   0.118  0.214  0.247  0.497  0.728
+HepG2    panel                305 0.232   0.394   0.068  0.209  0.316  0.590  0.757
+HepG2    panel+copy_single    305 0.236   0.394   0.067  0.220  0.316  0.591  0.758
+HepG2    panel+copy_pooled    305 0.260   0.402   0.064  0.238  0.322  0.603  0.779
+HepG2    panel_ls_copy_pooled  305 0.260   0.400   0.064  0.238  0.320  0.600  0.777
+Jurkat   direct               317 0.288   0.415   0.086  0.418  0.305  0.744  0.934
+Jurkat   copy_single          317 0.169   0.246   0.197  0.253  0.174  0.443  0.690
+Jurkat   copy_pooled          317 0.242   0.282   0.142  0.273  0.201  0.506  0.774
+Jurkat   panel                317 0.266   0.370   0.061  0.300  0.284  0.623  0.815
+Jurkat   panel+copy_single    317 0.274   0.371   0.061  0.314  0.284  0.624  0.816
+Jurkat   panel+copy_pooled    317 0.288   0.374   0.059  0.332  0.286  0.630  0.829
+Jurkat   panel_ls_copy_pooled  317 0.288   0.374   0.059  0.329  0.286  0.630  0.830
+HCT116   direct               227 0.295   0.252   0.153  0.191  0.202  0.528  0.637
+HCT116   copy_single          227 0.130   0.117   0.322  0.119  0.084  0.290  0.450
+HCT116   copy_pooled          227 0.230   0.175   0.197  0.143  0.134  0.392  0.546
+HCT116   panel                227 0.225   0.164   0.157  0.107  0.136  0.316  0.421
+HCT116   panel+copy_single    227 0.226   0.164   0.157  0.109  0.136  0.316  0.421
+HCT116   panel+copy_pooled    227 0.228   0.164   0.157  0.140  0.136  0.317  0.421
+HCT116   panel_ls_copy_pooled  227 0.214   0.155   0.163  0.164  0.127  0.303  0.417
+HEK293T  direct               142 0.284   0.211   0.146  0.173  0.173  0.599  0.764
+HEK293T  copy_single          142 0.143   0.101   0.324  0.100  0.073  0.374  0.598
+HEK293T  copy_pooled          142 0.229   0.137   0.245  0.119  0.104  0.459  0.687
+HEK293T  panel                142 0.222   0.136   0.146  0.076  0.113  0.356  0.559
+HEK293T  panel+copy_single    142 0.223   0.136   0.146  0.071  0.113  0.356  0.559
+HEK293T  panel+copy_pooled    142 0.225   0.137   0.146  0.086  0.114  0.356  0.559
+HEK293T  panel_ls_copy_pooled  142 0.204   0.128   0.153  0.100  0.106  0.331  0.549
+== paired specific correlation, genes outside the panel, specific responders (share A higher, Wilcoxon P)
+RPE1     panel              vs copy_single  n  426  0.49  P 5.6e-1
+RPE1     panel              vs copy_pooled  n  426  0.19  P 4.6e-45
+RPE1     panel+copy_pooled  vs panel        n  426  0.99  P 2.3e-71
+RPE1     panel_ls_copy_pooled vs panel        n  426  0.99  P 2.9e-71
+RPE1     panel_ls_copy_pooled vs copy_pooled  n  426  0.29  P 6.2e-21
+HepG2    panel              vs copy_single  n  213  0.54  P 5.7e-1
+HepG2    panel              vs copy_pooled  n  213  0.15  P 2.9e-26
+HepG2    panel+copy_pooled  vs panel        n  213  1.00  P 1.1e-36
+HepG2    panel_ls_copy_pooled vs panel        n  213  0.99  P 1.5e-36
+HepG2    panel_ls_copy_pooled vs copy_pooled  n  213  0.27  P 8.8e-13
+Jurkat   panel              vs copy_single  n  187  0.43  P 7.0e-2
+Jurkat   panel              vs copy_pooled  n  187  0.19  P 2.2e-20
+Jurkat   panel+copy_pooled  vs panel        n  187  1.00  P 2.0e-32
+Jurkat   panel_ls_copy_pooled vs panel        n  187  0.99  P 2.1e-32
+Jurkat   panel_ls_copy_pooled vs copy_pooled  n  187  0.35  P 7.6e-8
+HCT116   panel              vs copy_single  n  159  0.55  P 1.7e-1
+HCT116   panel              vs copy_pooled  n  159  0.11  P 3.5e-21
+HCT116   panel+copy_pooled  vs panel        n  159  1.00  P 7.7e-28
+HCT116   panel_ls_copy_pooled vs panel        n  159  1.00  P 7.7e-28
+HCT116   panel_ls_copy_pooled vs copy_pooled  n  159  0.19  P 2.6e-17
+HEK293T  panel              vs copy_single  n   93  0.54  P 2.7e-1
+HEK293T  panel              vs copy_pooled  n   93  0.17  P 1.3e-10
+HEK293T  panel+copy_pooled  vs panel        n   93  1.00  P 5.7e-17
+HEK293T  panel_ls_copy_pooled vs panel        n   93  1.00  P 5.7e-17
+HEK293T  panel_ls_copy_pooled vs copy_pooled  n   93  0.17  P 7.9e-9

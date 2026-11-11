@@ -1,8 +1,0 @@
-[package]
-name = "metal-check"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-metal = "0.29"
-anyhow = "1"

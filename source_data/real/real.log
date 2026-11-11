@@ -1,0 +1,9 @@
+universe genes 7094, matched by Ensembl id in both libraries 7051
+cells 112511 groups 104 L1000 genes 680
+UMIs per cell: whole transcriptome 10793 (panel genes 598, 0.055); enriched 5664 (panel genes 4541, 0.802); q_eq 0.5248 panel UMI ratio 7.5983
+readouts at 12.1s
+fold 0: targets 24 refs 7712 eval genes 5775 greedy present 492 alpha 10 / 1 at 31.6s
+fold 1: targets 11 refs 7707 eval genes 5778 greedy present 492 alpha 10 / 1 at 50.5s
+fold 2: targets 9 refs 7726 eval genes 5777 greedy present 492 alpha 10 / 1 at 69.4s
+fold 3: targets 18 refs 7693 eval genes 5777 greedy present 492 alpha 10 / 1 at 88.4s
+fold 4: targets 12 refs 7759 eval genes 5779 greedy present 491 alpha 10 / 1 at 107.3s
