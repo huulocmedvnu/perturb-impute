@@ -111,7 +111,26 @@ fig.update_layout(barmode="overlay",
     legend3=dict(L4, orientation="v", x=xe[0] + 0.02, y=y2[0] + 0.16))
 save(fig, "Figure4")
 
-# ---------------- Figure 5: equal sequencing budget (folds 1-4)
+# ---------------- Figure 5: inferences on complexes and pathways (summary written by the Rust tool, five K562 folds averaged)
+B = pd.read_csv(os.path.join(D, "bio", "summary.tsv"), sep="\t"); B["cell"] = B.dataset.str.replace(r" fold \d", "", regex=True)
+BM = B.groupby(["cell", "analysis", "frame", "readout", "metric"]).value.mean()
+bv = lambda cell, an, ro, me: float(BM[(cell, an, "all", ro, me)])
+RO = [("whole transcriptome, all cells", "Whole transcriptome, all cells", "#4d4d4d"), ("whole transcriptome, half", "Whole transcriptome, measured", GREY),
+      ("panel genes alone", "Panel genes alone", C[4]), ("hybrid + guide-target prior", "Hybrid profile with guide-target prior", C[2])]
+fig = make_subplots(1, 3, subplot_titles=["a  Complex partners", "b  Pathway scores", "c  Strongest pathway"], horizontal_spacing=0.09)
+for key, lab, col in RO:
+    fig.add_trace(go.Bar(x=CTS, y=[bv(c, "complex", key, "nearest is partner") for c in CTS], name=lab, marker_color=col, legendgroup=lab), 1, 1)
+    if key in ("whole transcriptome, half", "hybrid + guide-target prior"):
+        fig.add_trace(go.Bar(x=CTS, y=[bv(c, "pathway", key, "median r per gene set") for c in CTS], name=lab, marker_color=col, legendgroup=lab, showlegend=False), 1, 2)
+        fig.add_trace(go.Bar(x=CTS, y=[bv(c, "pathway", key, "top set identical") for c in CTS], name=lab, marker_color=col, legendgroup=lab, showlegend=False), 1, 3)
+fig.update_yaxes(title_text="Nearest knockdown in the same complex", range=[0, 0.5], row=1, col=1)
+fig.update_yaxes(title_text="Median r with the held-out half", range=[0, 0.85], row=1, col=2)
+fig.update_yaxes(title_text="Strongest gene set identical", range=[0, 0.9], row=1, col=3)
+style(fig, 1100, 430); fig.update_layout(barmode="group", legend=dict(orientation="h", y=-0.14, x=0.0))
+fig.for_each_trace(lambda t: t.update(marker_line=dict(color="white", width=1)))
+save(fig, "Figure5")
+
+# ---------------- Figure 6: equal sequencing budget (folds 1-4)
 S = N["sim"]; Q = ["0.02", "0.05", "0.1", "0.25", "1.0"]; qx = [float(q) * 100 for q in Q]
 fig = make_subplots(1, 2, subplot_titles=["a  Specific response", "b  DE genes recovered"], horizontal_spacing=0.12)
 lines = [("direct", "Whole transcriptome, measured", GREY, "dash"), ("greedyfull_500|targeted", "Targeted greedy MMSE panel", C[0], "solid"),
@@ -128,9 +147,9 @@ for c, col_ in ((1, "specific_r"), (2, "de_found")):
     fig.add_trace(go.Scatter(x=qx, y=[DEN.loc[float(q), col_] for q in Q], mode="lines+markers", name="Whole transcriptome, projected on reference programs", line=dict(color=BLACK, dash="dash", width=2), marker=dict(size=7, color=BLACK), showlegend=c == 1), 1, c)
 for c in (1, 2): fig.update_xaxes(type="log", title_text="Sequencing budget (% of reads)", tickvals=qx, ticktext=["2", "5", "10", "25", "100"], row=1, col=c)
 fig.update_yaxes(title_text="Median specific r", range=[-0.005, 0.1], row=1, col=1); fig.update_yaxes(title_text="Fraction of DE genes, correct sign", range=[0, 0.6], row=1, col=2)
-style(fig, 1000, 500); fig.update_layout(legend=dict(orientation="h", y=-0.25, x=0.0)); save(fig, "Figure5")
+style(fig, 1000, 500); fig.update_layout(legend=dict(orientation="h", y=-0.25, x=0.0)); save(fig, "Figure6")
 
-# ---------------- Figure 6: paired whole-transcriptome and L1000-enriched libraries (summaries written by the Rust tool)
+# ---------------- Figure 7: paired whole-transcriptome and L1000-enriched libraries (summaries written by the Rust tool)
 RS = os.path.join(D, "real") + "/"
 rs = {}; 
 for l in open(RS + "real.summary.tsv"):
@@ -162,7 +181,7 @@ fig.update_yaxes(title_text="Median specific r", range=[0, 0.2], row=2, col=1); 
 style(fig, 1000, 900)
 fig.update_layout(barmode="stack", legend=dict(orientation="h", x=0.0, y=0.56, xanchor="left", yanchor="top"), legend2=dict(orientation="v", x=0.58, y=0.995, xanchor="left", yanchor="top", bgcolor="rgba(255,255,255,0)"),
                   legend3=dict(orientation="h", x=0.0, y=-0.1, xanchor="left", yanchor="top"))
-save(fig, "Figure6")
+save(fig, "Figure7")
 
 # ---------------- Additional file Fig. S1: budget-aware MMSE panels (out/simb, all folds)
 SB = N["sim_budget"]
@@ -172,7 +191,7 @@ for key, lab, col in [("greedyfull_500", "Greedy MMSE (budget not modelled)", C[
 fig.add_trace(go.Scatter(x=qx[:4], y=[SB[q][f"budget{q}_500"] for q in Q[:4]], mode="markers", name="Panel designed for that budget by depth-aware MMSE", marker=dict(size=11, symbol="diamond", color=BLACK)))
 fig.update_xaxes(type="log", title_text="Sequencing budget (% of reads)", tickvals=qx[:4], ticktext=["2", "5", "10", "25"]); fig.update_yaxes(title_text="Median specific r", range=[0, 0.1])
 style(fig, 760, 450); save(fig, "FigureS1")
-# ---------------- Figure 7: X-Atlas/Orion atlases and pooled references (summaries written by the Rust tool)
+# ---------------- Figure 8: X-Atlas/Orion atlases and pooled references (summaries written by the Rust tool)
 X = os.path.join(D, "xatlas") + "/"
 def table(f):
     L = [l.split() for l in open(X + f) if l.strip()]; return L[0], L[1:]
@@ -227,8 +246,8 @@ fig.update_layout(barmode="overlay",
     legend2=dict(LG, x=xb[0], y=ya[0] - 0.07),
     legend3=dict(LG, x=xc[0] + 0.02, y=yc[1]))
 fig.for_each_trace(lambda t: t.update(marker_line=dict(color="white", width=1.5)) if t.type == "bar" else None)
-save(fig, "Figure7")
-# ---------------- Figure 8: measured panel versus profiles transferred from other cell lines (vcm summary, Rust)
+save(fig, "Figure8")
+# ---------------- Figure 9: measured panel versus profiles transferred from other cell lines (vcm summary, Rust)
 V = {}; scope = None
 for l in open(os.path.join(D, "vcm", "vcmsum.txt")):
     if l.startswith("== scope"): scope = l.split()[2]; continue
@@ -248,5 +267,5 @@ fig.update_yaxes(title_text="Median specific r", range=[0, 0.35], row=1, col=1)
 fig.update_yaxes(title_text="Fraction of DE genes, correct sign", range=[0, 0.65], row=1, col=2)
 fig.update_yaxes(title_text="Fraction of calls, opposite sign", range=[0, 0.36], row=1, col=3)
 style(fig, 1400, 480, b=90); fig.update_layout(barmode="overlay", legend=dict(orientation="h", y=-0.2, x=0.0))
-fig.for_each_trace(lambda t: t.update(marker_line=dict(color="white", width=1)) if t.type == "bar" else None); save(fig, "Figure8")
+fig.for_each_trace(lambda t: t.update(marker_line=dict(color="white", width=1)) if t.type == "bar" else None); save(fig, "Figure9")
 print("figures written")

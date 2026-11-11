@@ -14,6 +14,7 @@ mod real;
 mod causal;
 mod explore;
 mod explore_test;
+mod bio;
 
 use anyhow::{anyhow, bail, Result};
 use rayon::prelude::*;
@@ -571,6 +572,7 @@ fn main() -> Result<()> {
     if cmd == "vcmsum" { return vcm::summary(&a); }
     if cmd == "causal" { return causal::run(&a); }
     if cmd == "explore" { return explore::run(&a); }
+    if cmd == "bio" { return bio::run(&a); }
     if cmd == "mtx2cache" { return real::mtx2cache(&a); }
     if cmd == "realsum" { return real::summary(&a); }
     if cmd == "cellsum" { return real::cellsum(&a); }

@@ -19,7 +19,7 @@ test: build  ## unit tests, end-to-end command-line test and a printed run on th
 verify:  ## recompute the numbers of the manuscript from source_data/ and print a PASS/FAIL table
 	$(PYTHON) scripts/verify_manuscript_numbers.py
 
-figures:  ## regenerate Figs. 2 to 8 and Fig. S1 (and Fig. 1 if rsvg-convert is installed) into output/
+figures:  ## regenerate Figs. 2 to 9 and Fig. S1 (and Fig. 1 if rsvg-convert is installed) into output/
 	$(PYTHON) scripts/make_figures.py output
 	@if command -v rsvg-convert >/dev/null 2>&1; then $(PYTHON) scripts/make_flowchart.py output; else echo "rsvg-convert not found: Fig. 1 (schematic) skipped"; fi
 

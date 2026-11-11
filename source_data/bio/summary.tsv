@@ -1,0 +1,513 @@
+dataset	analysis	frame	readout	metric	n	value
+K562 fold 0	complex	all	whole transcriptome, all cells	pair AUROC	97903	0.79389
+K562 fold 0	complex	all	whole transcriptome, all cells	nearest is partner	443	0.426637
+K562 fold 0	complex	all	whole transcriptome, all cells	partner in nearest 5	443	0.566591
+K562 fold 0	complex	specific	whole transcriptome, all cells	pair AUROC	97903	0.800266
+K562 fold 0	complex	specific	whole transcriptome, all cells	nearest is partner	443	0.460497
+K562 fold 0	complex	specific	whole transcriptome, all cells	partner in nearest 5	443	0.609481
+K562 fold 0	complex	all	whole transcriptome, half	pair AUROC	97903	0.786569
+K562 fold 0	complex	all	whole transcriptome, half	nearest is partner	443	0.408578
+K562 fold 0	complex	all	whole transcriptome, half	partner in nearest 5	443	0.544018
+K562 fold 0	complex	specific	whole transcriptome, half	pair AUROC	97903	0.767257
+K562 fold 0	complex	specific	whole transcriptome, half	nearest is partner	443	0.410835
+K562 fold 0	complex	specific	whole transcriptome, half	partner in nearest 5	443	0.577878
+K562 fold 0	complex	all	projected on 160 programs	pair AUROC	97903	0.801165
+K562 fold 0	complex	all	projected on 160 programs	nearest is partner	443	0.417607
+K562 fold 0	complex	all	projected on 160 programs	partner in nearest 5	443	0.571106
+K562 fold 0	complex	specific	projected on 160 programs	pair AUROC	97903	0.789505
+K562 fold 0	complex	specific	projected on 160 programs	nearest is partner	443	0.428894
+K562 fold 0	complex	specific	projected on 160 programs	partner in nearest 5	443	0.598194
+K562 fold 0	complex	all	panel genes alone	pair AUROC	97903	0.80069
+K562 fold 0	complex	all	panel genes alone	nearest is partner	443	0.424379
+K562 fold 0	complex	all	panel genes alone	partner in nearest 5	443	0.559819
+K562 fold 0	complex	specific	panel genes alone	pair AUROC	97903	0.764446
+K562 fold 0	complex	specific	panel genes alone	nearest is partner	443	0.401806
+K562 fold 0	complex	specific	panel genes alone	partner in nearest 5	443	0.55079
+K562 fold 0	complex	all	hybrid (panel + imputed)	pair AUROC	97903	0.793337
+K562 fold 0	complex	all	hybrid (panel + imputed)	nearest is partner	443	0.408578
+K562 fold 0	complex	all	hybrid (panel + imputed)	partner in nearest 5	443	0.541761
+K562 fold 0	complex	specific	hybrid (panel + imputed)	pair AUROC	97903	0.772602
+K562 fold 0	complex	specific	hybrid (panel + imputed)	nearest is partner	443	0.413093
+K562 fold 0	complex	specific	hybrid (panel + imputed)	partner in nearest 5	443	0.539503
+K562 fold 0	complex	all	hybrid + guide-target prior	pair AUROC	97903	0.793045
+K562 fold 0	complex	all	hybrid + guide-target prior	nearest is partner	443	0.404063
+K562 fold 0	complex	all	hybrid + guide-target prior	partner in nearest 5	443	0.541761
+K562 fold 0	complex	specific	hybrid + guide-target prior	pair AUROC	97903	0.772846
+K562 fold 0	complex	specific	hybrid + guide-target prior	nearest is partner	443	0.410835
+K562 fold 0	complex	specific	hybrid + guide-target prior	partner in nearest 5	443	0.539503
+K562 fold 0	pathway	all	whole transcriptome, half	median r per gene set	48	0.353282
+K562 fold 0	pathway	all	whole transcriptome, half	median r, responders	48	0.602505
+K562 fold 0	pathway	all	whole transcriptome, half	top set identical	327	0.486239
+K562 fold 0	pathway	all	whole transcriptome, half	top set in first 3	327	0.721713
+K562 fold 0	pathway	all	whole transcriptome, half	top set same sign	327	0.975535
+K562 fold 0	pathway	all	projected on 160 programs	median r per gene set	48	0.462562
+K562 fold 0	pathway	all	projected on 160 programs	median r, responders	48	0.669597
+K562 fold 0	pathway	all	projected on 160 programs	top set identical	327	0.507645
+K562 fold 0	pathway	all	projected on 160 programs	top set in first 3	327	0.761468
+K562 fold 0	pathway	all	projected on 160 programs	top set same sign	327	0.966361
+K562 fold 0	pathway	all	hybrid (panel + imputed)	median r per gene set	48	0.45021
+K562 fold 0	pathway	all	hybrid (panel + imputed)	median r, responders	48	0.659686
+K562 fold 0	pathway	all	hybrid (panel + imputed)	top set identical	327	0.501529
+K562 fold 0	pathway	all	hybrid (panel + imputed)	top set in first 3	327	0.743119
+K562 fold 0	pathway	all	hybrid (panel + imputed)	top set same sign	327	0.978593
+K562 fold 0	pathway	all	hybrid + guide-target prior	median r per gene set	48	0.451586
+K562 fold 0	pathway	all	hybrid + guide-target prior	median r, responders	48	0.660317
+K562 fold 0	pathway	all	hybrid + guide-target prior	top set identical	327	0.501529
+K562 fold 0	pathway	all	hybrid + guide-target prior	top set in first 3	327	0.743119
+K562 fold 0	pathway	all	hybrid + guide-target prior	top set same sign	327	0.978593
+K562 fold 0	strength	all	whole transcriptome, half	Spearman of DE counts	1778	0.682187
+K562 fold 0	strength	all	whole transcriptome, half	Spearman of squared norm	1778	0.616594
+K562 fold 0	strength	all	projected on 160 programs	Spearman of DE counts	1778	0.640015
+K562 fold 0	strength	all	projected on 160 programs	Spearman of squared norm	1778	0.633755
+K562 fold 0	strength	all	hybrid (panel + imputed)	Spearman of DE counts	1778	0.648297
+K562 fold 0	strength	all	hybrid (panel + imputed)	Spearman of squared norm	1778	0.635384
+K562 fold 0	strength	all	hybrid + guide-target prior	Spearman of DE counts	1778	0.662263
+K562 fold 0	strength	all	hybrid + guide-target prior	Spearman of squared norm	1778	0.639682
+K562 fold 1	complex	all	whole transcriptome, all cells	pair AUROC	66066	0.686304
+K562 fold 1	complex	all	whole transcriptome, all cells	nearest is partner	364	0.222527
+K562 fold 1	complex	all	whole transcriptome, all cells	partner in nearest 5	364	0.337912
+K562 fold 1	complex	specific	whole transcriptome, all cells	pair AUROC	66066	0.71312
+K562 fold 1	complex	specific	whole transcriptome, all cells	nearest is partner	364	0.274725
+K562 fold 1	complex	specific	whole transcriptome, all cells	partner in nearest 5	364	0.376374
+K562 fold 1	complex	all	whole transcriptome, half	pair AUROC	66066	0.661949
+K562 fold 1	complex	all	whole transcriptome, half	nearest is partner	364	0.181319
+K562 fold 1	complex	all	whole transcriptome, half	partner in nearest 5	364	0.302198
+K562 fold 1	complex	specific	whole transcriptome, half	pair AUROC	66066	0.674306
+K562 fold 1	complex	specific	whole transcriptome, half	nearest is partner	364	0.233516
+K562 fold 1	complex	specific	whole transcriptome, half	partner in nearest 5	364	0.357143
+K562 fold 1	complex	all	projected on 160 programs	pair AUROC	66066	0.662637
+K562 fold 1	complex	all	projected on 160 programs	nearest is partner	364	0.228022
+K562 fold 1	complex	all	projected on 160 programs	partner in nearest 5	364	0.326923
+K562 fold 1	complex	specific	projected on 160 programs	pair AUROC	66066	0.680609
+K562 fold 1	complex	specific	projected on 160 programs	nearest is partner	364	0.241758
+K562 fold 1	complex	specific	projected on 160 programs	partner in nearest 5	364	0.365385
+K562 fold 1	complex	all	panel genes alone	pair AUROC	66066	0.661657
+K562 fold 1	complex	all	panel genes alone	nearest is partner	364	0.228022
+K562 fold 1	complex	all	panel genes alone	partner in nearest 5	364	0.324176
+K562 fold 1	complex	specific	panel genes alone	pair AUROC	66066	0.675045
+K562 fold 1	complex	specific	panel genes alone	nearest is partner	364	0.244505
+K562 fold 1	complex	specific	panel genes alone	partner in nearest 5	364	0.343407
+K562 fold 1	complex	all	hybrid (panel + imputed)	pair AUROC	66066	0.656883
+K562 fold 1	complex	all	hybrid (panel + imputed)	nearest is partner	364	0.21978
+K562 fold 1	complex	all	hybrid (panel + imputed)	partner in nearest 5	364	0.318681
+K562 fold 1	complex	specific	hybrid (panel + imputed)	pair AUROC	66066	0.673482
+K562 fold 1	complex	specific	hybrid (panel + imputed)	nearest is partner	364	0.25
+K562 fold 1	complex	specific	hybrid (panel + imputed)	partner in nearest 5	364	0.348901
+K562 fold 1	complex	all	hybrid + guide-target prior	pair AUROC	66066	0.656438
+K562 fold 1	complex	all	hybrid + guide-target prior	nearest is partner	364	0.21978
+K562 fold 1	complex	all	hybrid + guide-target prior	partner in nearest 5	364	0.318681
+K562 fold 1	complex	specific	hybrid + guide-target prior	pair AUROC	66066	0.672507
+K562 fold 1	complex	specific	hybrid + guide-target prior	nearest is partner	364	0.241758
+K562 fold 1	complex	specific	hybrid + guide-target prior	partner in nearest 5	364	0.348901
+K562 fold 1	pathway	all	whole transcriptome, half	median r per gene set	48	0.404305
+K562 fold 1	pathway	all	whole transcriptome, half	median r, responders	48	0.774701
+K562 fold 1	pathway	all	whole transcriptome, half	top set identical	214	0.5
+K562 fold 1	pathway	all	whole transcriptome, half	top set in first 3	214	0.742991
+K562 fold 1	pathway	all	whole transcriptome, half	top set same sign	214	0.995327
+K562 fold 1	pathway	all	projected on 160 programs	median r per gene set	48	0.512488
+K562 fold 1	pathway	all	projected on 160 programs	median r, responders	48	0.812365
+K562 fold 1	pathway	all	projected on 160 programs	top set identical	214	0.490654
+K562 fold 1	pathway	all	projected on 160 programs	top set in first 3	214	0.757009
+K562 fold 1	pathway	all	projected on 160 programs	top set same sign	214	0.985981
+K562 fold 1	pathway	all	hybrid (panel + imputed)	median r per gene set	48	0.49959
+K562 fold 1	pathway	all	hybrid (panel + imputed)	median r, responders	48	0.791571
+K562 fold 1	pathway	all	hybrid (panel + imputed)	top set identical	214	0.523364
+K562 fold 1	pathway	all	hybrid (panel + imputed)	top set in first 3	214	0.766355
+K562 fold 1	pathway	all	hybrid (panel + imputed)	top set same sign	214	0.995327
+K562 fold 1	pathway	all	hybrid + guide-target prior	median r per gene set	48	0.499057
+K562 fold 1	pathway	all	hybrid + guide-target prior	median r, responders	48	0.79147
+K562 fold 1	pathway	all	hybrid + guide-target prior	top set identical	214	0.523364
+K562 fold 1	pathway	all	hybrid + guide-target prior	top set in first 3	214	0.766355
+K562 fold 1	pathway	all	hybrid + guide-target prior	top set same sign	214	0.995327
+K562 fold 1	strength	all	whole transcriptome, half	Spearman of DE counts	1778	0.614696
+K562 fold 1	strength	all	whole transcriptome, half	Spearman of squared norm	1778	0.553593
+K562 fold 1	strength	all	projected on 160 programs	Spearman of DE counts	1778	0.537031
+K562 fold 1	strength	all	projected on 160 programs	Spearman of squared norm	1778	0.560153
+K562 fold 1	strength	all	hybrid (panel + imputed)	Spearman of DE counts	1778	0.589463
+K562 fold 1	strength	all	hybrid (panel + imputed)	Spearman of squared norm	1778	0.577025
+K562 fold 1	strength	all	hybrid + guide-target prior	Spearman of DE counts	1778	0.601581
+K562 fold 1	strength	all	hybrid + guide-target prior	Spearman of squared norm	1778	0.583352
+K562 fold 2	complex	all	whole transcriptome, all cells	pair AUROC	67896	0.859103
+K562 fold 2	complex	all	whole transcriptome, all cells	nearest is partner	369	0.238482
+K562 fold 2	complex	all	whole transcriptome, all cells	partner in nearest 5	369	0.308943
+K562 fold 2	complex	specific	whole transcriptome, all cells	pair AUROC	67896	0.884092
+K562 fold 2	complex	specific	whole transcriptome, all cells	nearest is partner	369	0.268293
+K562 fold 2	complex	specific	whole transcriptome, all cells	partner in nearest 5	369	0.338753
+K562 fold 2	complex	all	whole transcriptome, half	pair AUROC	67896	0.849625
+K562 fold 2	complex	all	whole transcriptome, half	nearest is partner	369	0.227642
+K562 fold 2	complex	all	whole transcriptome, half	partner in nearest 5	369	0.281843
+K562 fold 2	complex	specific	whole transcriptome, half	pair AUROC	67896	0.874982
+K562 fold 2	complex	specific	whole transcriptome, half	nearest is partner	369	0.224932
+K562 fold 2	complex	specific	whole transcriptome, half	partner in nearest 5	369	0.311653
+K562 fold 2	complex	all	projected on 160 programs	pair AUROC	67896	0.854428
+K562 fold 2	complex	all	projected on 160 programs	nearest is partner	369	0.238482
+K562 fold 2	complex	all	projected on 160 programs	partner in nearest 5	369	0.298103
+K562 fold 2	complex	specific	projected on 160 programs	pair AUROC	67896	0.888439
+K562 fold 2	complex	specific	projected on 160 programs	nearest is partner	369	0.257453
+K562 fold 2	complex	specific	projected on 160 programs	partner in nearest 5	369	0.311653
+K562 fold 2	complex	all	panel genes alone	pair AUROC	67896	0.858578
+K562 fold 2	complex	all	panel genes alone	nearest is partner	369	0.241192
+K562 fold 2	complex	all	panel genes alone	partner in nearest 5	369	0.298103
+K562 fold 2	complex	specific	panel genes alone	pair AUROC	67896	0.886558
+K562 fold 2	complex	specific	panel genes alone	nearest is partner	369	0.238482
+K562 fold 2	complex	specific	panel genes alone	partner in nearest 5	369	0.311653
+K562 fold 2	complex	all	hybrid (panel + imputed)	pair AUROC	67896	0.853727
+K562 fold 2	complex	all	hybrid (panel + imputed)	nearest is partner	369	0.243902
+K562 fold 2	complex	all	hybrid (panel + imputed)	partner in nearest 5	369	0.298103
+K562 fold 2	complex	specific	hybrid (panel + imputed)	pair AUROC	67896	0.887275
+K562 fold 2	complex	specific	hybrid (panel + imputed)	nearest is partner	369	0.249322
+K562 fold 2	complex	specific	hybrid (panel + imputed)	partner in nearest 5	369	0.303523
+K562 fold 2	complex	all	hybrid + guide-target prior	pair AUROC	67896	0.853386
+K562 fold 2	complex	all	hybrid + guide-target prior	nearest is partner	369	0.243902
+K562 fold 2	complex	all	hybrid + guide-target prior	partner in nearest 5	369	0.295393
+K562 fold 2	complex	specific	hybrid + guide-target prior	pair AUROC	67896	0.887095
+K562 fold 2	complex	specific	hybrid + guide-target prior	nearest is partner	369	0.243902
+K562 fold 2	complex	specific	hybrid + guide-target prior	partner in nearest 5	369	0.303523
+K562 fold 2	pathway	all	whole transcriptome, half	median r per gene set	48	0.331932
+K562 fold 2	pathway	all	whole transcriptome, half	median r, responders	48	0.698781
+K562 fold 2	pathway	all	whole transcriptome, half	top set identical	221	0.565611
+K562 fold 2	pathway	all	whole transcriptome, half	top set in first 3	221	0.746606
+K562 fold 2	pathway	all	whole transcriptome, half	top set same sign	221	0.977376
+K562 fold 2	pathway	all	projected on 160 programs	median r per gene set	48	0.446233
+K562 fold 2	pathway	all	projected on 160 programs	median r, responders	48	0.748389
+K562 fold 2	pathway	all	projected on 160 programs	top set identical	221	0.556561
+K562 fold 2	pathway	all	projected on 160 programs	top set in first 3	221	0.751131
+K562 fold 2	pathway	all	projected on 160 programs	top set same sign	221	0.972851
+K562 fold 2	pathway	all	hybrid (panel + imputed)	median r per gene set	48	0.440591
+K562 fold 2	pathway	all	hybrid (panel + imputed)	median r, responders	48	0.755532
+K562 fold 2	pathway	all	hybrid (panel + imputed)	top set identical	221	0.561086
+K562 fold 2	pathway	all	hybrid (panel + imputed)	top set in first 3	221	0.755656
+K562 fold 2	pathway	all	hybrid (panel + imputed)	top set same sign	221	0.963801
+K562 fold 2	pathway	all	hybrid + guide-target prior	median r per gene set	48	0.440804
+K562 fold 2	pathway	all	hybrid + guide-target prior	median r, responders	48	0.755748
+K562 fold 2	pathway	all	hybrid + guide-target prior	top set identical	221	0.556561
+K562 fold 2	pathway	all	hybrid + guide-target prior	top set in first 3	221	0.760181
+K562 fold 2	pathway	all	hybrid + guide-target prior	top set same sign	221	0.963801
+K562 fold 2	strength	all	whole transcriptome, half	Spearman of DE counts	1778	0.596595
+K562 fold 2	strength	all	whole transcriptome, half	Spearman of squared norm	1778	0.527584
+K562 fold 2	strength	all	projected on 160 programs	Spearman of DE counts	1778	0.577122
+K562 fold 2	strength	all	projected on 160 programs	Spearman of squared norm	1778	0.549158
+K562 fold 2	strength	all	hybrid (panel + imputed)	Spearman of DE counts	1778	0.586308
+K562 fold 2	strength	all	hybrid (panel + imputed)	Spearman of squared norm	1778	0.558075
+K562 fold 2	strength	all	hybrid + guide-target prior	Spearman of DE counts	1778	0.596615
+K562 fold 2	strength	all	hybrid + guide-target prior	Spearman of squared norm	1778	0.565102
+K562 fold 3	complex	all	whole transcriptome, all cells	pair AUROC	63903	0.614848
+K562 fold 3	complex	all	whole transcriptome, all cells	nearest is partner	358	0.142458
+K562 fold 3	complex	all	whole transcriptome, all cells	partner in nearest 5	358	0.206704
+K562 fold 3	complex	specific	whole transcriptome, all cells	pair AUROC	63903	0.647993
+K562 fold 3	complex	specific	whole transcriptome, all cells	nearest is partner	358	0.153631
+K562 fold 3	complex	specific	whole transcriptome, all cells	partner in nearest 5	358	0.226257
+K562 fold 3	complex	all	whole transcriptome, half	pair AUROC	63903	0.618392
+K562 fold 3	complex	all	whole transcriptome, half	nearest is partner	358	0.103352
+K562 fold 3	complex	all	whole transcriptome, half	partner in nearest 5	358	0.195531
+K562 fold 3	complex	specific	whole transcriptome, half	pair AUROC	63903	0.635223
+K562 fold 3	complex	specific	whole transcriptome, half	nearest is partner	358	0.131285
+K562 fold 3	complex	specific	whole transcriptome, half	partner in nearest 5	358	0.189944
+K562 fold 3	complex	all	projected on 160 programs	pair AUROC	63903	0.617527
+K562 fold 3	complex	all	projected on 160 programs	nearest is partner	358	0.156425
+K562 fold 3	complex	all	projected on 160 programs	partner in nearest 5	358	0.198324
+K562 fold 3	complex	specific	projected on 160 programs	pair AUROC	63903	0.645892
+K562 fold 3	complex	specific	projected on 160 programs	nearest is partner	358	0.122905
+K562 fold 3	complex	specific	projected on 160 programs	partner in nearest 5	358	0.189944
+K562 fold 3	complex	all	panel genes alone	pair AUROC	63903	0.608886
+K562 fold 3	complex	all	panel genes alone	nearest is partner	358	0.139665
+K562 fold 3	complex	all	panel genes alone	partner in nearest 5	358	0.215084
+K562 fold 3	complex	specific	panel genes alone	pair AUROC	63903	0.632903
+K562 fold 3	complex	specific	panel genes alone	nearest is partner	358	0.134078
+K562 fold 3	complex	specific	panel genes alone	partner in nearest 5	358	0.198324
+K562 fold 3	complex	all	hybrid (panel + imputed)	pair AUROC	63903	0.612067
+K562 fold 3	complex	all	hybrid (panel + imputed)	nearest is partner	358	0.136872
+K562 fold 3	complex	all	hybrid (panel + imputed)	partner in nearest 5	358	0.212291
+K562 fold 3	complex	specific	hybrid (panel + imputed)	pair AUROC	63903	0.637184
+K562 fold 3	complex	specific	hybrid (panel + imputed)	nearest is partner	358	0.128492
+K562 fold 3	complex	specific	hybrid (panel + imputed)	partner in nearest 5	358	0.195531
+K562 fold 3	complex	all	hybrid + guide-target prior	pair AUROC	63903	0.612363
+K562 fold 3	complex	all	hybrid + guide-target prior	nearest is partner	358	0.131285
+K562 fold 3	complex	all	hybrid + guide-target prior	partner in nearest 5	358	0.209497
+K562 fold 3	complex	specific	hybrid + guide-target prior	pair AUROC	63903	0.637275
+K562 fold 3	complex	specific	hybrid + guide-target prior	nearest is partner	358	0.134078
+K562 fold 3	complex	specific	hybrid + guide-target prior	partner in nearest 5	358	0.189944
+K562 fold 3	pathway	all	whole transcriptome, half	median r per gene set	48	0.328578
+K562 fold 3	pathway	all	whole transcriptome, half	median r, responders	48	0.691972
+K562 fold 3	pathway	all	whole transcriptome, half	top set identical	220	0.504545
+K562 fold 3	pathway	all	whole transcriptome, half	top set in first 3	220	0.722727
+K562 fold 3	pathway	all	whole transcriptome, half	top set same sign	220	0.968182
+K562 fold 3	pathway	all	projected on 160 programs	median r per gene set	48	0.44343
+K562 fold 3	pathway	all	projected on 160 programs	median r, responders	48	0.74654
+K562 fold 3	pathway	all	projected on 160 programs	top set identical	220	0.554545
+K562 fold 3	pathway	all	projected on 160 programs	top set in first 3	220	0.754545
+K562 fold 3	pathway	all	projected on 160 programs	top set same sign	220	0.959091
+K562 fold 3	pathway	all	hybrid (panel + imputed)	median r per gene set	48	0.418298
+K562 fold 3	pathway	all	hybrid (panel + imputed)	median r, responders	48	0.738556
+K562 fold 3	pathway	all	hybrid (panel + imputed)	top set identical	220	0.527273
+K562 fold 3	pathway	all	hybrid (panel + imputed)	top set in first 3	220	0.75
+K562 fold 3	pathway	all	hybrid (panel + imputed)	top set same sign	220	0.954545
+K562 fold 3	pathway	all	hybrid + guide-target prior	median r per gene set	48	0.418701
+K562 fold 3	pathway	all	hybrid + guide-target prior	median r, responders	48	0.740925
+K562 fold 3	pathway	all	hybrid + guide-target prior	top set identical	220	0.536364
+K562 fold 3	pathway	all	hybrid + guide-target prior	top set in first 3	220	0.75
+K562 fold 3	pathway	all	hybrid + guide-target prior	top set same sign	220	0.954545
+K562 fold 3	strength	all	whole transcriptome, half	Spearman of DE counts	1777	0.547817
+K562 fold 3	strength	all	whole transcriptome, half	Spearman of squared norm	1777	0.488779
+K562 fold 3	strength	all	projected on 160 programs	Spearman of DE counts	1777	0.543664
+K562 fold 3	strength	all	projected on 160 programs	Spearman of squared norm	1777	0.520357
+K562 fold 3	strength	all	hybrid (panel + imputed)	Spearman of DE counts	1777	0.551666
+K562 fold 3	strength	all	hybrid (panel + imputed)	Spearman of squared norm	1777	0.530536
+K562 fold 3	strength	all	hybrid + guide-target prior	Spearman of DE counts	1777	0.566947
+K562 fold 3	strength	all	hybrid + guide-target prior	Spearman of squared norm	1777	0.536087
+K562 fold 4	complex	all	whole transcriptome, all cells	pair AUROC	58996	0.693784
+K562 fold 4	complex	all	whole transcriptome, all cells	nearest is partner	344	0.229651
+K562 fold 4	complex	all	whole transcriptome, all cells	partner in nearest 5	344	0.296512
+K562 fold 4	complex	specific	whole transcriptome, all cells	pair AUROC	58996	0.717856
+K562 fold 4	complex	specific	whole transcriptome, all cells	nearest is partner	344	0.252907
+K562 fold 4	complex	specific	whole transcriptome, all cells	partner in nearest 5	344	0.311047
+K562 fold 4	complex	all	whole transcriptome, half	pair AUROC	58996	0.671431
+K562 fold 4	complex	all	whole transcriptome, half	nearest is partner	344	0.19186
+K562 fold 4	complex	all	whole transcriptome, half	partner in nearest 5	344	0.273256
+K562 fold 4	complex	specific	whole transcriptome, half	pair AUROC	58996	0.697147
+K562 fold 4	complex	specific	whole transcriptome, half	nearest is partner	344	0.247093
+K562 fold 4	complex	specific	whole transcriptome, half	partner in nearest 5	344	0.296512
+K562 fold 4	complex	all	projected on 160 programs	pair AUROC	58996	0.667955
+K562 fold 4	complex	all	projected on 160 programs	nearest is partner	344	0.212209
+K562 fold 4	complex	all	projected on 160 programs	partner in nearest 5	344	0.273256
+K562 fold 4	complex	specific	projected on 160 programs	pair AUROC	58996	0.690543
+K562 fold 4	complex	specific	projected on 160 programs	nearest is partner	344	0.238372
+K562 fold 4	complex	specific	projected on 160 programs	partner in nearest 5	344	0.305233
+K562 fold 4	complex	all	panel genes alone	pair AUROC	58996	0.671138
+K562 fold 4	complex	all	panel genes alone	nearest is partner	344	0.212209
+K562 fold 4	complex	all	panel genes alone	partner in nearest 5	344	0.281977
+K562 fold 4	complex	specific	panel genes alone	pair AUROC	58996	0.690962
+K562 fold 4	complex	specific	panel genes alone	nearest is partner	344	0.238372
+K562 fold 4	complex	specific	panel genes alone	partner in nearest 5	344	0.319767
+K562 fold 4	complex	all	hybrid (panel + imputed)	pair AUROC	58996	0.661459
+K562 fold 4	complex	all	hybrid (panel + imputed)	nearest is partner	344	0.212209
+K562 fold 4	complex	all	hybrid (panel + imputed)	partner in nearest 5	344	0.281977
+K562 fold 4	complex	specific	hybrid (panel + imputed)	pair AUROC	58996	0.68441
+K562 fold 4	complex	specific	hybrid (panel + imputed)	nearest is partner	344	0.232558
+K562 fold 4	complex	specific	hybrid (panel + imputed)	partner in nearest 5	344	0.311047
+K562 fold 4	complex	all	hybrid + guide-target prior	pair AUROC	58996	0.661529
+K562 fold 4	complex	all	hybrid + guide-target prior	nearest is partner	344	0.209302
+K562 fold 4	complex	all	hybrid + guide-target prior	partner in nearest 5	344	0.27907
+K562 fold 4	complex	specific	hybrid + guide-target prior	pair AUROC	58996	0.684324
+K562 fold 4	complex	specific	hybrid + guide-target prior	nearest is partner	344	0.232558
+K562 fold 4	complex	specific	hybrid + guide-target prior	partner in nearest 5	344	0.311047
+K562 fold 4	pathway	all	whole transcriptome, half	median r per gene set	48	0.365827
+K562 fold 4	pathway	all	whole transcriptome, half	median r, responders	48	0.71994
+K562 fold 4	pathway	all	whole transcriptome, half	top set identical	245	0.542857
+K562 fold 4	pathway	all	whole transcriptome, half	top set in first 3	245	0.795918
+K562 fold 4	pathway	all	whole transcriptome, half	top set same sign	245	0.967347
+K562 fold 4	pathway	all	projected on 160 programs	median r per gene set	48	0.464795
+K562 fold 4	pathway	all	projected on 160 programs	median r, responders	48	0.750939
+K562 fold 4	pathway	all	projected on 160 programs	top set identical	245	0.546939
+K562 fold 4	pathway	all	projected on 160 programs	top set in first 3	245	0.816327
+K562 fold 4	pathway	all	projected on 160 programs	top set same sign	245	0.983673
+K562 fold 4	pathway	all	hybrid (panel + imputed)	median r per gene set	48	0.449684
+K562 fold 4	pathway	all	hybrid (panel + imputed)	median r, responders	48	0.735805
+K562 fold 4	pathway	all	hybrid (panel + imputed)	top set identical	245	0.538776
+K562 fold 4	pathway	all	hybrid (panel + imputed)	top set in first 3	245	0.804082
+K562 fold 4	pathway	all	hybrid (panel + imputed)	top set same sign	245	0.979592
+K562 fold 4	pathway	all	hybrid + guide-target prior	median r per gene set	48	0.452411
+K562 fold 4	pathway	all	hybrid + guide-target prior	median r, responders	48	0.735812
+K562 fold 4	pathway	all	hybrid + guide-target prior	top set identical	245	0.538776
+K562 fold 4	pathway	all	hybrid + guide-target prior	top set in first 3	245	0.804082
+K562 fold 4	pathway	all	hybrid + guide-target prior	top set same sign	245	0.979592
+K562 fold 4	strength	all	whole transcriptome, half	Spearman of DE counts	1777	0.603555
+K562 fold 4	strength	all	whole transcriptome, half	Spearman of squared norm	1777	0.539402
+K562 fold 4	strength	all	projected on 160 programs	Spearman of DE counts	1777	0.557938
+K562 fold 4	strength	all	projected on 160 programs	Spearman of squared norm	1777	0.559282
+K562 fold 4	strength	all	hybrid (panel + imputed)	Spearman of DE counts	1777	0.586424
+K562 fold 4	strength	all	hybrid (panel + imputed)	Spearman of squared norm	1777	0.572285
+K562 fold 4	strength	all	hybrid + guide-target prior	Spearman of DE counts	1777	0.59186
+K562 fold 4	strength	all	hybrid + guide-target prior	Spearman of squared norm	1777	0.576056
+RPE1	complex	all	whole transcriptome, all cells	pair AUROC	803278	0.721752
+RPE1	complex	all	whole transcriptome, all cells	nearest is partner	1268	0.397476
+RPE1	complex	all	whole transcriptome, all cells	partner in nearest 5	1268	0.529968
+RPE1	complex	specific	whole transcriptome, all cells	pair AUROC	803278	0.747048
+RPE1	complex	specific	whole transcriptome, all cells	nearest is partner	1268	0.411672
+RPE1	complex	specific	whole transcriptome, all cells	partner in nearest 5	1268	0.56388
+RPE1	complex	all	whole transcriptome, half	pair AUROC	803278	0.701204
+RPE1	complex	all	whole transcriptome, half	nearest is partner	1268	0.350946
+RPE1	complex	all	whole transcriptome, half	partner in nearest 5	1268	0.492902
+RPE1	complex	specific	whole transcriptome, half	pair AUROC	803278	0.729239
+RPE1	complex	specific	whole transcriptome, half	nearest is partner	1268	0.373817
+RPE1	complex	specific	whole transcriptome, half	partner in nearest 5	1268	0.524448
+RPE1	complex	all	projected on 160 programs	pair AUROC	803278	0.729759
+RPE1	complex	all	projected on 160 programs	nearest is partner	1268	0.40142
+RPE1	complex	all	projected on 160 programs	partner in nearest 5	1268	0.547319
+RPE1	complex	specific	projected on 160 programs	pair AUROC	803278	0.75862
+RPE1	complex	specific	projected on 160 programs	nearest is partner	1268	0.425079
+RPE1	complex	specific	projected on 160 programs	partner in nearest 5	1268	0.565457
+RPE1	complex	all	panel genes alone	pair AUROC	803278	0.759068
+RPE1	complex	all	panel genes alone	nearest is partner	1268	0.425868
+RPE1	complex	all	panel genes alone	partner in nearest 5	1268	0.55836
+RPE1	complex	specific	panel genes alone	pair AUROC	803278	0.768981
+RPE1	complex	specific	panel genes alone	nearest is partner	1268	0.436909
+RPE1	complex	specific	panel genes alone	partner in nearest 5	1268	0.567823
+RPE1	complex	all	hybrid (panel + imputed)	pair AUROC	803278	0.741065
+RPE1	complex	all	hybrid (panel + imputed)	nearest is partner	1268	0.412461
+RPE1	complex	all	hybrid (panel + imputed)	partner in nearest 5	1268	0.55205
+RPE1	complex	specific	hybrid (panel + imputed)	pair AUROC	803278	0.767184
+RPE1	complex	specific	hybrid (panel + imputed)	nearest is partner	1268	0.434543
+RPE1	complex	specific	hybrid (panel + imputed)	partner in nearest 5	1268	0.567823
+RPE1	complex	all	hybrid + guide-target prior	pair AUROC	803278	0.739924
+RPE1	complex	all	hybrid + guide-target prior	nearest is partner	1268	0.410883
+RPE1	complex	all	hybrid + guide-target prior	partner in nearest 5	1268	0.547319
+RPE1	complex	specific	hybrid + guide-target prior	pair AUROC	803278	0.766322
+RPE1	complex	specific	hybrid + guide-target prior	nearest is partner	1268	0.429811
+RPE1	complex	specific	hybrid + guide-target prior	partner in nearest 5	1268	0.56388
+RPE1	pathway	all	whole transcriptome, half	median r per gene set	48	0.754874
+RPE1	pathway	all	whole transcriptome, half	median r, responders	48	0.769644
+RPE1	pathway	all	whole transcriptome, half	top set identical	1802	0.813541
+RPE1	pathway	all	whole transcriptome, half	top set in first 3	1802	0.933962
+RPE1	pathway	all	whole transcriptome, half	top set same sign	1802	0.987236
+RPE1	pathway	all	projected on 160 programs	median r per gene set	48	0.726099
+RPE1	pathway	all	projected on 160 programs	median r, responders	48	0.738845
+RPE1	pathway	all	projected on 160 programs	top set identical	1802	0.824639
+RPE1	pathway	all	projected on 160 programs	top set in first 3	1802	0.926193
+RPE1	pathway	all	projected on 160 programs	top set same sign	1802	0.985017
+RPE1	pathway	all	hybrid (panel + imputed)	median r per gene set	48	0.736762
+RPE1	pathway	all	hybrid (panel + imputed)	median r, responders	48	0.742753
+RPE1	pathway	all	hybrid (panel + imputed)	top set identical	1802	0.796892
+RPE1	pathway	all	hybrid (panel + imputed)	top set in first 3	1802	0.922309
+RPE1	pathway	all	hybrid (panel + imputed)	top set same sign	1802	0.983352
+RPE1	pathway	all	hybrid + guide-target prior	median r per gene set	48	0.737008
+RPE1	pathway	all	hybrid + guide-target prior	median r, responders	48	0.742931
+RPE1	pathway	all	hybrid + guide-target prior	top set identical	1802	0.795782
+RPE1	pathway	all	hybrid + guide-target prior	top set in first 3	1802	0.921199
+RPE1	pathway	all	hybrid + guide-target prior	top set same sign	1802	0.983352
+RPE1	strength	all	whole transcriptome, half	Spearman of DE counts	2393	0.91047
+RPE1	strength	all	whole transcriptome, half	Spearman of squared norm	2393	0.887219
+RPE1	strength	all	projected on 160 programs	Spearman of DE counts	2393	0.872516
+RPE1	strength	all	projected on 160 programs	Spearman of squared norm	2393	0.880264
+RPE1	strength	all	hybrid (panel + imputed)	Spearman of DE counts	2393	0.903693
+RPE1	strength	all	hybrid (panel + imputed)	Spearman of squared norm	2393	0.87423
+RPE1	strength	all	hybrid + guide-target prior	Spearman of DE counts	2393	0.90424
+RPE1	strength	all	hybrid + guide-target prior	Spearman of squared norm	2393	0.874196
+HepG2	complex	all	whole transcriptome, all cells	pair AUROC	803278	0.755051
+HepG2	complex	all	whole transcriptome, all cells	nearest is partner	1268	0.380915
+HepG2	complex	all	whole transcriptome, all cells	partner in nearest 5	1268	0.514196
+HepG2	complex	specific	whole transcriptome, all cells	pair AUROC	803278	0.759959
+HepG2	complex	specific	whole transcriptome, all cells	nearest is partner	1268	0.406151
+HepG2	complex	specific	whole transcriptome, all cells	partner in nearest 5	1268	0.541798
+HepG2	complex	all	whole transcriptome, half	pair AUROC	803278	0.740191
+HepG2	complex	all	whole transcriptome, half	nearest is partner	1268	0.328076
+HepG2	complex	all	whole transcriptome, half	partner in nearest 5	1268	0.452681
+HepG2	complex	specific	whole transcriptome, half	pair AUROC	803278	0.744274
+HepG2	complex	specific	whole transcriptome, half	nearest is partner	1268	0.347792
+HepG2	complex	specific	whole transcriptome, half	partner in nearest 5	1268	0.475552
+HepG2	complex	all	projected on 160 programs	pair AUROC	803278	0.760271
+HepG2	complex	all	projected on 160 programs	nearest is partner	1268	0.344637
+HepG2	complex	all	projected on 160 programs	partner in nearest 5	1268	0.48817
+HepG2	complex	specific	projected on 160 programs	pair AUROC	803278	0.765186
+HepG2	complex	specific	projected on 160 programs	nearest is partner	1268	0.376183
+HepG2	complex	specific	projected on 160 programs	partner in nearest 5	1268	0.518139
+HepG2	complex	all	panel genes alone	pair AUROC	803278	0.765911
+HepG2	complex	all	panel genes alone	nearest is partner	1268	0.36041
+HepG2	complex	all	panel genes alone	partner in nearest 5	1268	0.507886
+HepG2	complex	specific	panel genes alone	pair AUROC	803278	0.762172
+HepG2	complex	specific	panel genes alone	nearest is partner	1268	0.382492
+HepG2	complex	specific	panel genes alone	partner in nearest 5	1268	0.524448
+HepG2	complex	all	hybrid (panel + imputed)	pair AUROC	803278	0.755449
+HepG2	complex	all	hybrid (panel + imputed)	nearest is partner	1268	0.34306
+HepG2	complex	all	hybrid (panel + imputed)	partner in nearest 5	1268	0.48817
+HepG2	complex	specific	hybrid (panel + imputed)	pair AUROC	803278	0.760926
+HepG2	complex	specific	hybrid (panel + imputed)	nearest is partner	1268	0.381703
+HepG2	complex	specific	hybrid (panel + imputed)	partner in nearest 5	1268	0.529968
+HepG2	complex	all	hybrid + guide-target prior	pair AUROC	803278	0.754664
+HepG2	complex	all	hybrid + guide-target prior	nearest is partner	1268	0.340694
+HepG2	complex	all	hybrid + guide-target prior	partner in nearest 5	1268	0.485804
+HepG2	complex	specific	hybrid + guide-target prior	pair AUROC	803278	0.759949
+HepG2	complex	specific	hybrid + guide-target prior	nearest is partner	1268	0.378549
+HepG2	complex	specific	hybrid + guide-target prior	partner in nearest 5	1268	0.527603
+HepG2	pathway	all	whole transcriptome, half	median r per gene set	45	0.678268
+HepG2	pathway	all	whole transcriptome, half	median r, responders	45	0.794653
+HepG2	pathway	all	whole transcriptome, half	top set identical	1041	0.715658
+HepG2	pathway	all	whole transcriptome, half	top set in first 3	1041	0.898175
+HepG2	pathway	all	whole transcriptome, half	top set same sign	1041	0.985591
+HepG2	pathway	all	projected on 160 programs	median r per gene set	45	0.674122
+HepG2	pathway	all	projected on 160 programs	median r, responders	45	0.732466
+HepG2	pathway	all	projected on 160 programs	top set identical	1041	0.722382
+HepG2	pathway	all	projected on 160 programs	top set in first 3	1041	0.907781
+HepG2	pathway	all	projected on 160 programs	top set same sign	1041	0.987512
+HepG2	pathway	all	hybrid (panel + imputed)	median r per gene set	45	0.639982
+HepG2	pathway	all	hybrid (panel + imputed)	median r, responders	45	0.699908
+HepG2	pathway	all	hybrid (panel + imputed)	top set identical	1041	0.676273
+HepG2	pathway	all	hybrid (panel + imputed)	top set in first 3	1041	0.893372
+HepG2	pathway	all	hybrid (panel + imputed)	top set same sign	1041	0.98463
+HepG2	pathway	all	hybrid + guide-target prior	median r per gene set	45	0.640519
+HepG2	pathway	all	hybrid + guide-target prior	median r, responders	45	0.701735
+HepG2	pathway	all	hybrid + guide-target prior	top set identical	1041	0.675312
+HepG2	pathway	all	hybrid + guide-target prior	top set in first 3	1041	0.893372
+HepG2	pathway	all	hybrid + guide-target prior	top set same sign	1041	0.98463
+HepG2	strength	all	whole transcriptome, half	Spearman of DE counts	2393	0.804271
+HepG2	strength	all	whole transcriptome, half	Spearman of squared norm	2393	0.776417
+HepG2	strength	all	projected on 160 programs	Spearman of DE counts	2393	0.779588
+HepG2	strength	all	projected on 160 programs	Spearman of squared norm	2393	0.793519
+HepG2	strength	all	hybrid (panel + imputed)	Spearman of DE counts	2393	0.802233
+HepG2	strength	all	hybrid (panel + imputed)	Spearman of squared norm	2393	0.793659
+HepG2	strength	all	hybrid + guide-target prior	Spearman of DE counts	2393	0.7983
+HepG2	strength	all	hybrid + guide-target prior	Spearman of squared norm	2393	0.794468
+Jurkat	complex	all	whole transcriptome, all cells	pair AUROC	802011	0.758269
+Jurkat	complex	all	whole transcriptome, all cells	nearest is partner	1267	0.332281
+Jurkat	complex	all	whole transcriptome, all cells	partner in nearest 5	1267	0.476717
+Jurkat	complex	specific	whole transcriptome, all cells	pair AUROC	802011	0.76452
+Jurkat	complex	specific	whole transcriptome, all cells	nearest is partner	1267	0.36543
+Jurkat	complex	specific	whole transcriptome, all cells	partner in nearest 5	1267	0.539069
+Jurkat	complex	all	whole transcriptome, half	pair AUROC	802011	0.737978
+Jurkat	complex	all	whole transcriptome, half	nearest is partner	1267	0.298343
+Jurkat	complex	all	whole transcriptome, half	partner in nearest 5	1267	0.435675
+Jurkat	complex	specific	whole transcriptome, half	pair AUROC	802011	0.738715
+Jurkat	complex	specific	whole transcriptome, half	nearest is partner	1267	0.327545
+Jurkat	complex	specific	whole transcriptome, half	partner in nearest 5	1267	0.480663
+Jurkat	complex	all	projected on 160 programs	pair AUROC	802011	0.75657
+Jurkat	complex	all	projected on 160 programs	nearest is partner	1267	0.350434
+Jurkat	complex	all	projected on 160 programs	partner in nearest 5	1267	0.499605
+Jurkat	complex	specific	projected on 160 programs	pair AUROC	802011	0.75094
+Jurkat	complex	specific	projected on 160 programs	nearest is partner	1267	0.385951
+Jurkat	complex	specific	projected on 160 programs	partner in nearest 5	1267	0.528019
+Jurkat	complex	all	panel genes alone	pair AUROC	802011	0.754978
+Jurkat	complex	all	panel genes alone	nearest is partner	1267	0.351223
+Jurkat	complex	all	panel genes alone	partner in nearest 5	1267	0.487766
+Jurkat	complex	specific	panel genes alone	pair AUROC	802011	0.754036
+Jurkat	complex	specific	panel genes alone	nearest is partner	1267	0.367009
+Jurkat	complex	specific	panel genes alone	partner in nearest 5	1267	0.523283
+Jurkat	complex	all	hybrid (panel + imputed)	pair AUROC	802011	0.750007
+Jurkat	complex	all	hybrid (panel + imputed)	nearest is partner	1267	0.335438
+Jurkat	complex	all	hybrid (panel + imputed)	partner in nearest 5	1267	0.474349
+Jurkat	complex	specific	hybrid (panel + imputed)	pair AUROC	802011	0.751308
+Jurkat	complex	specific	hybrid (panel + imputed)	nearest is partner	1267	0.360695
+Jurkat	complex	specific	hybrid (panel + imputed)	partner in nearest 5	1267	0.520916
+Jurkat	complex	all	hybrid + guide-target prior	pair AUROC	802011	0.748617
+Jurkat	complex	all	hybrid + guide-target prior	nearest is partner	1267	0.33307
+Jurkat	complex	all	hybrid + guide-target prior	partner in nearest 5	1267	0.474349
+Jurkat	complex	specific	hybrid + guide-target prior	pair AUROC	802011	0.749389
+Jurkat	complex	specific	hybrid + guide-target prior	nearest is partner	1267	0.356748
+Jurkat	complex	specific	hybrid + guide-target prior	partner in nearest 5	1267	0.516969
+Jurkat	pathway	all	whole transcriptome, half	median r per gene set	45	0.595531
+Jurkat	pathway	all	whole transcriptome, half	median r, responders	45	0.705191
+Jurkat	pathway	all	whole transcriptome, half	top set identical	1172	0.585324
+Jurkat	pathway	all	whole transcriptome, half	top set in first 3	1172	0.821672
+Jurkat	pathway	all	whole transcriptome, half	top set same sign	1172	0.983788
+Jurkat	pathway	all	projected on 160 programs	median r per gene set	45	0.631382
+Jurkat	pathway	all	projected on 160 programs	median r, responders	45	0.722304
+Jurkat	pathway	all	projected on 160 programs	top set identical	1172	0.574232
+Jurkat	pathway	all	projected on 160 programs	top set in first 3	1172	0.831058
+Jurkat	pathway	all	projected on 160 programs	top set same sign	1172	0.985495
+Jurkat	pathway	all	hybrid (panel + imputed)	median r per gene set	45	0.624979
+Jurkat	pathway	all	hybrid (panel + imputed)	median r, responders	45	0.714737
+Jurkat	pathway	all	hybrid (panel + imputed)	top set identical	1172	0.58959
+Jurkat	pathway	all	hybrid (panel + imputed)	top set in first 3	1172	0.832765
+Jurkat	pathway	all	hybrid (panel + imputed)	top set same sign	1172	0.985495
+Jurkat	pathway	all	hybrid + guide-target prior	median r per gene set	45	0.62485
+Jurkat	pathway	all	hybrid + guide-target prior	median r, responders	45	0.714744
+Jurkat	pathway	all	hybrid + guide-target prior	top set identical	1172	0.588737
+Jurkat	pathway	all	hybrid + guide-target prior	top set in first 3	1172	0.835324
+Jurkat	pathway	all	hybrid + guide-target prior	top set same sign	1172	0.985495
+Jurkat	strength	all	whole transcriptome, half	Spearman of DE counts	2392	0.865052
+Jurkat	strength	all	whole transcriptome, half	Spearman of squared norm	2392	0.843168
+Jurkat	strength	all	projected on 160 programs	Spearman of DE counts	2392	0.798724
+Jurkat	strength	all	projected on 160 programs	Spearman of squared norm	2392	0.851711
+Jurkat	strength	all	hybrid (panel + imputed)	Spearman of DE counts	2392	0.842261
+Jurkat	strength	all	hybrid (panel + imputed)	Spearman of squared norm	2392	0.84559
+Jurkat	strength	all	hybrid + guide-target prior	Spearman of DE counts	2392	0.848385
+Jurkat	strength	all	hybrid + guide-target prior	Spearman of squared norm	2392	0.847555

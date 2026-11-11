@@ -14,8 +14,8 @@ The repository holds the command-line tool, the analysis pipeline of the manuscr
 pip install -r environment/requirements.txt    # numpy, pandas, scipy, plotly, kaleido
 make build      # compiles the Rust binaries (about 40 s on first build)
 make test       # unit tests and the command-line workflow on toy data (under 10 s after the build)
-make verify     # recomputes 162 numbers of the manuscript from source_data/ (a few seconds)
-make figures    # regenerates Figs. 2 to 8 and Fig. S1 from source_data/ into output/ (about 10 s)
+make verify     # recomputes 197 numbers of the manuscript from source_data/ (a few seconds)
+make figures    # regenerates Figs. 2 to 9 and Fig. S1 from source_data/ into output/ (about 10 s)
 make all        # the four steps in sequence
 ```
 
@@ -32,11 +32,11 @@ No atlas has to be downloaded for these steps. Requirements are listed in `envir
 | `preprocess/`, `orion-ingest/` | pseudobulk z-scores from cell caches, and streaming ingest of the X-Atlas/Orion Parquet files |
 | `panels/` | released panels and per-gene tables (Additional files 3 to 5 of the manuscript) |
 | `models/` | pre-trained models and the inputs needed to rebuild them (`models/README.md`) |
-| `source_data/` | per-perturbation tables (`tables/`), summaries (`real/`, `sim/`, `xatlas/`, `vcm/`, `alt/`, `example/`) and `numbers.json` behind the figures and tables |
+| `source_data/` | per-perturbation tables (`tables/`), summaries (`real/`, `sim/`, `xatlas/`, `vcm/`, `alt/`, `bio/`, `example/`) and `numbers.json` behind the figures and tables |
 | `scripts/` | `verify_manuscript_numbers.py`, `make_figures.py`, `make_flowchart.py`, `make_source_data.py`, `ms_numbers.py`, and the drivers of the full pipeline in `scripts/pipeline/` and `scripts/baselines/` |
 | `tests/` | `cli.rs` (end-to-end test), `data/` (toy data, 0.7 MB), `smoke.sh`, and `validation/` (comparisons of the Rust code with independent numpy implementations, which need the full outputs) |
 | `environment/` | pinned Python packages and notes on the toolchain |
-| `ext/` | CORUM complexes, L1000 landmark list, gene universe, and the baseline panels (highly variable genes, geneBasis) |
+| `ext/` | CORUM complexes, L1000 landmark list, Hallmark gene sets (MSigDB, Enrichr library MSigDB_Hallmark_2020), gene universe, and the baseline panels (highly variable genes, geneBasis) |
 
 ## Using `perturb-impute`
 
@@ -113,11 +113,12 @@ All paths are relative to the repository root. "pipeline" means the `panelimp` b
 | Fig. 3e | `example/mbtps2_fold1.tsv` | pipeline `example`; `make_figures.py` | same |
 | Fig. 4a to d | `numbers.json` (from `tables/de_*.dex.tsv.gz`, `tables/*.de.tsv.gz`) | pipeline `upg`, `de`; `make_figures.py` | Measured and imputed genes combined |
 | Fig. 4e | `numbers.json` (`rank_oracle`) | `scripts/pipeline/oracle_rank.py` | same |
-| Fig. 5a, b | `numbers.json` (`sim`, from `tables/simd.sim.tsv.gz`), `sim/denoised.tsv` (from `tables/simd.den.tsv.gz`) | pipeline `sim --upg2`; `scripts/sim_denoised.py`; `make_figures.py` | Read-thinning simulation |
-| Fig. 6a to d | `real/real.log`, `real/real.summary.tsv`, `real/cells.summary.tsv` (from `tables/paired.real.tsv.gz`, `paired.cells.tsv.gz`) | pipeline `mtx2cache`, `real`, `realcells`, `realsum`, `cellsum` (`scripts/pipeline/real.sh`); `make_figures.py` | Enriched library of the L1000 landmarks |
-| Fig. 7a, b | `xatlas/hct116_*.txt`, `xatlas/hek293t_*.txt`, `numbers.json` | `orion-ingest`, pipeline `cv`, `upg`, `cvsum` (`scripts/pipeline/xatlas_analysis.sh`, `xatlas_l1000.sh`); `make_figures.py` | Two independent atlases |
-| Fig. 7c | `xatlas/multi_panframe.txt` | pipeline `multi`, `multisum` (`scripts/pipeline/xatlas_multi_tf.sh`); `make_figures.py` | Pooled reference |
-| Fig. 8a to c | `vcm/vcmsum.txt` | pipeline `vcm`, `vcmsum`; `make_figures.py` | Transferred profiles |
+| Fig. 5a to c | `bio/summary.tsv` | pipeline `bio` (per fold, and per screen with `--target`); `scripts/make_bio_source.py`; `make_figures.py` | Inferences on complexes and pathways |
+| Fig. 6a, b | `numbers.json` (`sim`, from `tables/simd.sim.tsv.gz`), `sim/denoised.tsv` (from `tables/simd.den.tsv.gz`) | pipeline `sim --upg2`; `scripts/sim_denoised.py`; `make_figures.py` | Read-thinning simulation |
+| Fig. 7a to d | `real/real.log`, `real/real.summary.tsv`, `real/cells.summary.tsv` (from `tables/paired.real.tsv.gz`, `paired.cells.tsv.gz`) | pipeline `mtx2cache`, `real`, `realcells`, `realsum`, `cellsum` (`scripts/pipeline/real.sh`); `make_figures.py` | Enriched library of the L1000 landmarks |
+| Fig. 8a, b | `xatlas/hct116_*.txt`, `xatlas/hek293t_*.txt`, `numbers.json` | `orion-ingest`, pipeline `cv`, `upg`, `cvsum` (`scripts/pipeline/xatlas_analysis.sh`, `xatlas_l1000.sh`); `make_figures.py` | Two independent atlases |
+| Fig. 8c | `xatlas/multi_panframe.txt` | pipeline `multi`, `multisum` (`scripts/pipeline/xatlas_multi_tf.sh`); `make_figures.py` | Pooled reference |
+| Fig. 9a to c | `vcm/vcmsum.txt` | pipeline `vcm`, `vcmsum`; `make_figures.py` | Transferred profiles |
 | Fig. S1 | `numbers.json` (`sim_budget`, from `tables/simb.sim.tsv.gz`) | pipeline `sim --design-budgets`; `make_figures.py` | Read-thinning simulation |
 | Table 1 | none (recommendations, with the evidence cited in the table) | | Discussion |
 | Table S1 | `numbers.json` (`rank_oracle`, `rank_knn`), `tables/cvk.knn.tsv.gz` | pipeline `cv` (neighbour copying), `upg`; `scripts/pipeline/oracle_rank.py` | Effect size ranking |
@@ -129,6 +130,7 @@ All paths are relative to the repository root. "pipeline" means the `panelimp` b
 | Table S6 | not in `source_data/` (per-stratum counts of the DE runs) | pipeline `de --panel-size N [--same-cells]` | DE calls |
 | Table S7 | `vcm/vcmsum.txt` | pipeline `vcm`, `vcmsum` | Transferred profiles |
 | Table S8 | `real/real.summary.tsv`, `real/cells.summary.tsv` | pipeline `realsum`, `cellsum` | Enriched library |
+| Table S9 | `bio/summary.tsv` | pipeline `bio`; `scripts/make_bio_source.py` | Inferences on complexes and pathways |
 | Additional file 5 | `panels/xatlas/*.tsv` | `perturb-impute select` (`scripts/pipeline/xatlas_models.sh`) | Data availability |
 
 `scripts/make_source_data.py` writes `source_data/tables/` from the pipeline outputs, and `scripts/ms_numbers.py` writes `numbers.json`. File names in `tables/` are those of the pipeline outputs. Columns: `r_ceil` and `r_imp` are total correlations of the measured input half and of the imputed profile with the held-out half, `r_ceil_perp` and `r_imp_perp` the specific correlations, `r_den160_perp` the specific correlation of the profile projected on 160 programs, `oor` the out-of-reference score, `n_de`, `tp` and `disc` the numbers of DE genes, of calls with the correct sign and of calls with the opposite sign.
@@ -153,7 +155,8 @@ The steps below repeat the analyses from raw data. They need several tens of GB 
 5. Paired libraries. `scripts/pipeline/real.sh` after the two matrices of GSE146194 are placed in `ext/replogle2020/`.
 6. X-Atlas/Orion. `orion-ingest` and `scripts/pipeline/xatlas_*.sh`, then `panelimp multi` and `panelimp vcm`.
 7. Alternative models and the guide-target prior. `panelimp explore`, `panelimp explore --stage test` for each fold and with `--target` for the other screens, and `panelimp causal` (optional Metal backend with `--features metal` on macOS), then `scripts/make_alt_source.py`.
-8. Numbers and figures. `scripts/ms_numbers.py`, `scripts/make_source_data.py`, then `make verify figures`.
+8. Inferences on complexes, pathways and strength. `panelimp bio` for each fold and with `--target` for the other screens, then `scripts/make_bio_source.py`.
+9. Numbers and figures. `scripts/ms_numbers.py`, `scripts/make_source_data.py`, then `make verify figures`.
 
 The usage of every pipeline subcommand is documented at the top of `src/main.rs`.
 

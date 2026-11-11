@@ -185,6 +185,27 @@ check(S, "knockdowns with the target gene outside the panel", "511", num(r"outsi
 check(S, "median z of the target gene", "-3.8", num(r"median measured z (-[\d.]+)"), "summary"); check(S, "median z of genes within 2 kb", "-2.05", num(r"0 to 2 kb from the target: \d+ pairs, median z (-[\d.]+)"), "summary")
 check(S, "leading eigenvalue of the noise covariance", "108.6", num(r"leading noise eigenvalues ([\d.]+)"), "summary")
 
+# ---------------- inferences on complexes, pathways and strength (Fig. 5, Table S9), summaries of the Rust tool
+BI = pd.read_csv(os.path.join(SD, "bio", "summary.tsv"), sep="\t"); BI["cell"] = BI.dataset.str.replace(r" fold \d", "", regex=True)
+BIm = BI.groupby(["cell", "analysis", "frame", "readout", "metric"]).value.mean(); S = "Biological inference"
+bi = lambda cell, an, ro, me: float(BIm[(cell, an, "all", ro, me)])
+HY, WT, PA, AL = "hybrid + guide-target prior", "whole transcriptome, half", "panel genes alone", "whole transcriptome, all cells"
+kn = BI[(BI.cell == "K562") & (BI.frame == "all") & (BI.readout == HY)]
+check(S, "K562 knockdowns with a complex partner tested", "1,878", kn[kn.metric == "nearest is partner"].n.sum(), "summary"); check(S, "K562 responding knockdowns", "1,227", kn[kn.metric == "top set identical"].n.sum(), "summary")
+for ro, e_auc, e_nn in [(HY, "0.715", "24.2%"), (WT, "0.718", "22.3%"), (PA, "0.720", "24.9%"), (AL, "0.730", "25.2%")]:
+    check(S, f"complex AUC, {ro}", e_auc, bi("K562", "complex", ro, "pair AUROC"), "summary"); check(S, f"nearest knockdown is a partner, {ro}", e_nn, bi("K562", "complex", ro, "nearest is partner"), "summary")
+for cell, e_h, e_w in [("RPE1", "0.740", "0.701"), ("HepG2", "0.755", "0.740"), ("Jurkat", "0.749", "0.738")]:
+    check(S, f"complex AUC, hybrid, {cell}", e_h, bi(cell, "complex", HY, "pair AUROC"), "summary"); check(S, f"complex AUC, whole transcriptome, {cell}", e_w, bi(cell, "complex", WT, "pair AUROC"), "summary")
+for me, e_h, e_w in [("median r per gene set", "0.453", "0.357"), ("median r, responders", "0.737", "0.698"), ("top set identical", "53.1%", "52.0%"), ("top set same sign", "97.4%", "97.7%")]:
+    check(S, f"pathway {me}, hybrid", e_h, bi("K562", "pathway", HY, me), "summary"); check(S, f"pathway {me}, whole transcriptome", e_w, bi("K562", "pathway", WT, me), "summary")
+for cell, e_h, e_w in [("RPE1", "0.737", "0.755"), ("HepG2", "0.641", "0.678"), ("Jurkat", "0.625", "0.596")]:
+    check(S, f"pathway r, hybrid, {cell}", e_h, bi(cell, "pathway", HY, "median r per gene set"), "summary"); check(S, f"pathway r, whole transcriptome, {cell}", e_w, bi(cell, "pathway", WT, "median r per gene set"), "summary")
+check(S, "DE count rank correlation, hybrid", "0.604", bi("K562", "strength", HY, "Spearman of DE counts"), "summary"); check(S, "DE count rank correlation, whole transcriptome", "0.609", bi("K562", "strength", WT, "Spearman of DE counts"), "summary")
+in_range(S, "DE count rank correlation, hybrid, other cell lines", "0.798", "0.904", [bi(c, "strength", HY, "Spearman of DE counts") for c in ("RPE1", "HepG2", "Jurkat")], "summary")
+in_range(S, "DE count rank correlation, whole transcriptome, other cell lines", "0.804", "0.910", [bi(c, "strength", WT, "Spearman of DE counts") for c in ("RPE1", "HepG2", "Jurkat")], "summary")
+dmax = max(abs(float(BIm[(c, an, "all", HY, me)]) - float(BIm[(c, an, "all", "hybrid (panel + imputed)", me)])) for (c, an, fr, ro, me) in BIm.index if ro == HY and fr == "all")
+check(S, "largest difference between hybrid with and without the prior", "0.011", dmax, "summary")
+
 # ---------------- values that need the full atlas
 S = "Reference atlas"
 check(S, "programs above the noise level, K562", "172", N["mp"]["n_programs"], "json"); check(S, "genes analysed", "7,094", N["noise"]["n_genes_universe"], "json"); check(S, "knockdowns", "9,866", N["noise"]["n_perts_gwps"], "json")

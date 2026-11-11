@@ -77,7 +77,7 @@ for i, ct in enumerate(cts):
 text(bx + bw + 16, by - 105, "greedy", 24, fill=BLUE); text(bx + bw + 16, by - 30, "L1000", 24, fill=RED)
 # ---- row 3: DE presence, direction, size
 m = N["hybrid"]["K562"]
-y = row_frame(2, GREEN, "Differential expression", ["Same screens, cells split", "into two independent halves"], "Fig. 4")
+y = row_frame(2, GREEN, "Differential expression", ["Same screens, cells split", "into two independent halves", "DE calls, complexes, pathways"], "Fig. 4, 5")
 for i in range(3): cell(C2 + 30 + i * 36, y + 100, GREEN)
 for i in range(3): cell(C2 + 30 + i * 36, y + 170, GREEN)
 text(C2 + 175, y + 106, "half A: panel measured, rest imputed", 24); text(C2 + 175, y + 176, "half B: all genes measured", 24)
@@ -92,7 +92,7 @@ for i, (lab, a, b) in enumerate([("DE found", m["direct_all"]["recall"], m["hybr
 text(bx + 346, by - 105, "measured", 24, fill=GREY); text(bx + 346, by - 75, "hybrid", 24, fill=GREEN)
 # ---- row 4: equal sequencing budget
 S = N["sim"]
-y = row_frame(3, PURPLE, "Equal sequencing budget", ["Replogle, K562 essential genes", f"{S['n_cells_total']:,} cells, reads removed", "at random (2% to 100%)"], "Fig. 5")
+y = row_frame(3, PURPLE, "Equal sequencing budget", ["Replogle, K562 essential genes", f"{S['n_cells_total']:,} cells, reads removed", "at random (2% to 100%)"], "Fig. 6")
 random.seed(2)
 hs = [random.random() for _ in range(18)]
 for j, h in enumerate(hs): rect(C2 + j * 13, y + 190 - 18 - h * 40, 10, 18 + h * 40, GREY, 0.6)
@@ -114,7 +114,7 @@ CSV = {}
 for l in open(os.path.join(HERE, "real", "cells.summary.tsv")):
     t = l.rstrip("\n").split("\t")
     if len(t) == 6 and t[0] != "m": CSV[(t[0], t[1])] = float(t[3])
-y = row_frame(4, PINK, "Paired libraries", ["Same K562 cells sequenced twice:", "whole transcriptome and", "L1000-enriched library"], "Fig. 6")
+y = row_frame(4, PINK, "Paired libraries", ["Same K562 cells sequenced twice:", "whole transcriptome and", "L1000-enriched library"], "Fig. 7")
 random.seed(11); hp = [random.random() for _ in range(18)]
 for j, h in enumerate(hp): rect(C2 + j * 13, y + 190 - 18 - h * 40, 10, 18 + h * 40, PINK if j % 6 == 2 else GREY, 0.8 if j % 6 == 2 else 0.6)
 text(C2 + 117, y + 225, "whole transcriptome", 24, anchor="middle")
@@ -136,7 +136,7 @@ def cvrec(f, panel):
         t = l.split()
         if t and t[0] == panel: return float(t[2])
 XA = {ct: (cvrec(f"{ct.lower()}_cv.txt", "greedy_500"), cvrec(f"{ct.lower()}_cv.txt", "random1_500")) for ct in ("HCT116", "HEK293T")}
-y = row_frame(5, ORANGE, "Independent atlases", ["X-Atlas/Orion: HCT116, HEK293T", "7.9 million cells, different protocol", "Atlases pooled as one reference"], "Fig. 7")
+y = row_frame(5, ORANGE, "Independent atlases", ["X-Atlas/Orion: HCT116, HEK293T", "7.9 million cells, different protocol", "Atlases pooled as one reference"], "Fig. 8")
 for j, (lab, col) in enumerate([("K562", BLUE), ("HCT116", ORANGE), ("HEK293T", "#B6801F")]):
     x = C2 + j * 120
     text(x + 44, y + 70, lab, 22, "bold", "middle", col)
@@ -160,7 +160,7 @@ for l in open(os.path.join(HERE, "vcm", "vcmsum.txt")):
     t = l.split()
     if len(t) > 5 and t[0] == "RPE1": VC[t[1]] = (float(t[3]), float(t[5]))
 CYAN = "#19D3F3"
-y = row_frame(6, CYAN, "Transfer between cell lines", ["Same knockdown measured in", "other cell lines, as a virtual", "cell model could learn it"], "Fig. 8")
+y = row_frame(6, CYAN, "Transfer between cell lines", ["Same knockdown measured in", "other cell lines, as a virtual", "cell model could learn it"], "Fig. 9")
 for i, col in enumerate((BLUE, ORANGE, GREEN, PURPLE)): cell(C2 + 25 + (i % 2) * 45, y + 100 + (i // 2) * 50, col)
 text(C2 + 47, y + 215, "other lines", 22, anchor="middle")
 line(C2 + 100, y + 125, C2 + 170, y + 125, GREY, 4, head=True)
