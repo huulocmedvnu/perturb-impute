@@ -88,7 +88,7 @@ d = pd.read_csv(O + "simb.sim.tsv", sep="\t"); SB = {}
 for q, g in d.groupby("q"):
     SB[str(q)] = {p: float(g[(g.panel == p) & (g.assay == "targeted")].rp_imp.median()) for p in g.panel.unique()}
 N["sim_budget"] = SB
-# DE upgrades and hybrid readout (out/de_*.dex.tsv; K562 = five folds)
+# DE call variants and hybrid readout (out/de_*.dex.tsv; K562 = five folds)
 H = {}
 for ct, f in [("K562", "de_k562_all"), ("RPE1", "de_rpe1"), ("HepG2", "de_hepg2"), ("Jurkat", "de_jurkat")]:
     d = pd.read_csv(O + f + ".dex.tsv", sep="\t"); H[ct] = {}
@@ -97,7 +97,7 @@ for ct, f in [("K562", "de_k562_all"), ("RPE1", "de_rpe1"), ("HepG2", "de_hepg2"
 N["hybrid"] = H
 # cv2 decomposition
 cv = pd.read_csv(O + "simb.cv2.tsv", sep="\t").dropna(); N["cv2_tech_dominated"] = float((cv.cv2_tech > cv.cv2_bio).mean()); N["cv2_tech_share_median"] = float((cv.cv2_tech / cv.cv2_tot).median())
-# effect-size ranking: oracle (fold 0, scripts/oracle_rank.py, PLAN step 4) and neighbour copying (cvk)
+# effect-size ranking: projection control (first fold, scripts/pipeline/oracle_rank.py) and neighbour copying (cvk)
 N["rank_oracle"] = {"direct": 0.311, "K20": 0.200, "K160": 0.209, "K500": 0.252, "K2000": 0.286, "ridge500": 0.191}
 k = pd.read_csv(O + "cvk.knn.tsv", sep="\t"); k = k[k.panel == "designed_500"]
 N["rank_knn"] = {"ridge": float(k.ridge_spa.median()), "knn": float(k.knn_spa.median()), "hyb": float(k.hyb_spa.median()), "p_hyb": float(wilcoxon((k.hyb_spa - k.ridge_spa).dropna()).pvalue)}

@@ -1,4 +1,4 @@
-"""Step 4 summary: ridge vs knn vs hybrid (size ranking among DE, matched calls, r)."""
+"""Summary: ridge vs knn vs hybrid (size ranking among DE, matched calls, r)."""
 import sys, pandas as pd, numpy as np
 from scipy.stats import wilcoxon
 d = pd.read_csv(sys.argv[1] + ".knn.tsv", sep="\t")

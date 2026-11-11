@@ -95,7 +95,7 @@ for f in [0, 3]:
             for k2, v2 in vals.items():
                 if np.isfinite(v2): upd(k2, abs(row[k2] - v2))
                 elif np.isfinite(row[k2]): upd(k2 + "_nan_mismatch", 1)
-        # step 4: knn / hybrid
+        # knn / hybrid
         def nbrs(xq, xp):
             st = lambda x: (lambda c: c / np.maximum(np.linalg.norm(c, axis=1, keepdims=True), 1e-300))(x - x.mean(1, keepdims=True))
             C = st(xq) @ st(xp).T; km = min(100, len(xp)); out = []

@@ -1,4 +1,4 @@
-"""Step 6 summary: targeted panel vs whole transcriptome at equal UMI budget."""
+"""Summary: targeted panel vs whole transcriptome at equal UMI budget."""
 import sys, pandas as pd, numpy as np
 from scipy.stats import wilcoxon
 d = pd.read_csv(sys.argv[1] + ".sim.tsv", sep="\t")

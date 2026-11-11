@@ -1,4 +1,4 @@
-//! panelimp: kill-test for panel imputation of perturbation profiles.
+//! panelimp: analysis pipeline for panel imputation of perturbation profiles.
 //!   panelimp cv       --z PREFIX --folds folds.tsv --hubs hub_excl.tsv --l1000 FILE --out PREFIX [--sizes 100,200,500,718] [--folds-run 0,1,..]
 //!   panelimp transfer --z PREFIX --zt PREFIX --l1000 FILE --out PREFIX [--sizes ...]
 //! z files: coexsc format (<p>.meta.tsv, <p>.genes.tsv, <p>.z.f32 = 3 x P x G: all, half 0, half 1).
@@ -480,7 +480,7 @@ fn eval_panel(z: &Z, zt: &Z, gr: &Grams, refs: &[usize], itr: &[usize], inner_ho
             sm.0, sm.1, sr.0, sr.1, sc.0, sc.1, sp(di, false), sp(yi, false), sp(&ci, false), sp(di, true), sp(yi, true), sp(&ci, true), k.1, k.2)
     }).collect();
     for r in derows { writeln!(wd, "{r}")?; }
-    // step 4: neighbour copying (knn) and ridge + neighbour residuals (hybrid); tune on inner holdout
+    // neighbour copying (knn) and ridge + neighbour residuals (hybrid); tune on inner holdout
     let ks = p.genes.len();
     let tune = |pool_rows: &[usize], wtx: &[f64], qz: &Z, qrows: &[usize], base: &[f64]| -> (Vec<Nb>, Vec<f64>, Vec<f64>) {
         let xp = z.mat(0, pool_rows, &p.genes);

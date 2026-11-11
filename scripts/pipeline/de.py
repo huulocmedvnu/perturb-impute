@@ -1,4 +1,4 @@
-"""Summarize DE call / direction / relative-size preservation (step 3)."""
+"""Summarize DE call / direction / relative-size preservation."""
 import sys, pandas as pd, numpy as np
 d = pd.read_csv(sys.argv[1] + ".de.tsv", sep="\t")
 for p in ["designed_200", "designed_500", "designed_680", "random1_680", "l1000_680"]:

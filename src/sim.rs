@@ -1,4 +1,4 @@
-//! Count-level simulation at equal sequencing budget (step 6).
+//! Count-level simulation at equal sequencing budget.
 //! Binomial thinning of single-cell UMIs from a coexsc cache, pseudobulk CP10k per half, z as in
 //! coexsc z (s2 from half differences across the scenario's perturbations). Assays: whole
 //! transcriptome at budget q (direct), panel genes extracted from it, and a targeted panel with the

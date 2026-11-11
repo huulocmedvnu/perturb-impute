@@ -23,7 +23,7 @@ bytemuck = "1"
 memmap2 = "0.9"
 
 [features]
-# experimental Metal backend of `panelimp causal` (macOS only)
+# optional Metal backend of `panelimp causal` (macOS only)
 metal = ["dep:metal"]
 
 [target.'cfg(target_os = "macos")'.dependencies]

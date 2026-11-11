@@ -1,4 +1,4 @@
-//! Real targeted readout (step 14): the same K562 CRISPRi cells read as whole transcriptome and
+//! Measured targeted readout: the same K562 CRISPRi cells read as whole transcriptome and
 //! after hybridisation enrichment for the L1000 landmarks (Replogle 2020, GSE146194 exp7 / exp11).
 //! `mtx2cache` converts a 10x MatrixMarket stream to the sparse cell cache; `run` compares
 //! readouts of half 0 with the whole-transcriptome half 1; `summary` prints medians and tests.

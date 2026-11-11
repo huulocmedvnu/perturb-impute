@@ -59,6 +59,7 @@ check(S, "responding test perturbations", "515", len(W))
 for name, exp in [("greedy_500", "0.87"), ("hvgresp_500", "0.86"), ("designed_500", "0.85"), ("genebasis_500", "0.83"), ("hvg_500", "0.79"), ("random1_500", "0.60"),
                   ("designed_200", "0.77"), ("greedy_200", "0.76"), ("l1000_680", "0.69")]:
     check(S, f"recovery {name}", exp, (W[name] / den).median())
+check(S, "recovery random panel of 680 genes", "0.67", (W["random1_680"] / den).median())
 d = (W["greedy_680"] - W["l1000_680"]).dropna(); check(S, "greedy 680 above L1000 680", "91%", (d > 0).mean()); check(S, "greedy 680 against L1000 680", "P < 0.001", wilcoxon(d).pvalue)
 lm, gr = [], []
 for pre in ["trg", "tr_hepg2", "tr_jurkat"]:
@@ -107,7 +108,7 @@ cv = tab("simb.cv2.tsv").dropna(); check(S, "counting share of gene-level varian
 # ---------------- paired whole-transcriptome and L1000-enriched libraries (Fig. 6)
 R = tab("paired.real.tsv"); S = "Paired libraries"
 P = R.pivot(index="pert", columns="readout", values="rp"); rr = lambda a: P[a].median()
-check(S, "testable knockdowns", "74", len(P)); check(S, "median cells per knockdown", "893", R[R.readout == "R1_direct_full"].n_cells.median())
+check(S, "testable knockdowns", "74", len(P)); check(S, "median input cells per knockdown", "447", np.ceil(R[R.readout == "R1_direct_full"].n_cells.median() / 2)); check(S, "median cells per knockdown", "893", R[R.readout == "R1_direct_full"].n_cells.median())
 check(S, "enriched library, specific r", "0.117", rr("R3_l1000_enriched")); check(S, "extracted landmark genes, specific r", "0.124", rr("R2_l1000_extract"))
 check(S, "enriched against extracted", "P = 0.40", wilcoxon(P["R3_l1000_enriched"] - P["R2_l1000_extract"]).pvalue)
 check(S, "recovery, enriched", "0.69", rr("R3_l1000_enriched") / rr("D160_denoised")); check(S, "recovery, extracted", "0.72", rr("R2_l1000_extract") / rr("D160_denoised"))
@@ -140,6 +141,12 @@ def xrec(f, panel):
         if t and t[0] == panel: return float(t[2])
 S = "Independent atlases"
 check(S, "greedy MMSE recovery, HCT116", "0.88", xrec("hct116_cv.txt", "greedy_500"), "summary"); check(S, "greedy MMSE recovery, HEK293T", "0.73", xrec("hek293t_cv.txt", "greedy_500"), "summary")
+def xde(f, method):
+    for line in open(os.path.join(SD, "xatlas", f)):
+        t = line.split()
+        if t and t[0] == method: return float(t[1])
+check(S, "hybrid profile, DE found, HCT116", "7.9%", xde("hct116_de.txt", "hybrid_all"), "summary"); check(S, "direct measurement, DE found, HCT116", "10.7%", xde("hct116_de.txt", "direct_all"), "summary")
+check(S, "hybrid profile, DE found, HEK293T", "7.0%", xde("hek293t_de.txt", "hybrid_all"), "summary"); check(S, "direct measurement, DE found, HEK293T", "9.3%", xde("hek293t_de.txt", "direct_all"), "summary")
 check(S, "random panel recovery, HCT116", "0.57", xrec("hct116_cv.txt", "random1_500"), "summary"); check(S, "random panel recovery, HEK293T", "0.40", xrec("hek293t_cv.txt", "random1_500"), "summary")
 V = {}; scope = None
 for line in open(os.path.join(SD, "vcm", "vcmsum.txt")):
@@ -163,6 +170,7 @@ check(S, "whole half on 160 programs, mean size rank", "0.095", K.loc["whole hal
 alt = [K.loc[m, "size_rank_mean"] for m in ("H1 cross-half ridge", "H3 local experts", "H4 cross-half + quadratic")] + list(GG[GG.method.str.startswith("ridge +")].groupby("method").size_rank_mean.mean())
 in_range(S, "alternative models, mean size rank", "0.070", "0.075", alt, "summary")
 check(S, "guide-target prior, mean size rank", "0.139", K.loc[PRI, "size_rank_mean"], "summary")
+check(S, "part of the difference closed by the prior", "0.066", K.loc[PRI, "size_rank_mean"] - K.loc[RID, "size_rank_mean"], "summary"); check(S, "difference between two measured halves and ridge", "0.125", K.loc["direct (input half)", "size_rank_mean"] - K.loc[RID, "size_rank_mean"], "summary")
 check(S, "recovery, ridge (mean of fold medians)", "0.883", K.loc[RID, "recovery"], "summary"); check(S, "recovery, guide-target prior", "0.928", K.loc[PRI, "recovery"], "summary")
 check(S, "DE found outside the panel, ridge", "0.206", K.loc[RID, "de_recall"], "summary"); check(S, "DE found outside the panel, guide-target prior", "0.229", K.loc[PRI, "de_recall"], "summary")
 check(S, "opposite sign, ridge", "0.141", K.loc[RID, "opposite_sign"], "summary"); check(S, "opposite sign, guide-target prior", "0.126", K.loc[PRI, "opposite_sign"], "summary")

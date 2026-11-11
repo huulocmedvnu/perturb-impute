@@ -1,4 +1,4 @@
-"""Step 5 summary: designed vs baselines at each size (common genes, responding perturbations, paired)."""
+"""Summary: designed vs baselines at each size (common genes, responding perturbations, paired)."""
 import sys, re, numpy as np, pandas as pd
 from scipy.stats import wilcoxon
 R = pd.read_csv(sys.argv[1] + ".perts.tsv", sep="\t"); D = pd.read_csv(sys.argv[1] + ".de.tsv", sep="\t")

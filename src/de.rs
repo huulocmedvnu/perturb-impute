@@ -1,4 +1,4 @@
-//! Step 10: DE preservation upgrades. A1 posterior-scaled calls with INFO gate, A2 Huber IRLS
+//! DE calls from imputed profiles and the hybrid readout. A1 posterior-scaled calls with INFO gate, A2 Huber IRLS
 //! reweighting, B communality-corrected size ranking, C unsupervised panel alignment of the
 //! target screen (CORAL, reliability ratio), D hybrid measured-panel plus imputed readout.
 use crate::*;

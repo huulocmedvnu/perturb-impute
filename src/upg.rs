@@ -1,6 +1,6 @@
-//! Step 9 upgrades: specific-subspace greedy (U1a), spectral imputation with empirical-Bayes scaling
-//! (U1b), sparse residual correction on leave-one-out panel residuals (U3) and a leave-one-out
-//! out-of-reference score (U4). All choices use the inner holdout of the reference only.
+//! Alternative selectors and imputation models: specific-subspace greedy selection, spectral imputation with
+//! empirical-Bayes scaling, sparse residual correction on leave-one-out panel residuals and a leave-one-out
+//! out-of-reference score. All choices use the inner holdout of the reference only.
 use crate::*;
 
 /// Low-rank greedy MMSE. Signal covariance Sigma = U U' (U: g x r, row-major), noise nz_j,
@@ -156,7 +156,7 @@ fn ranks_mean(a: &[f64], b: &[f64]) -> Vec<f64> {
     ra.iter().zip(&rb).map(|(x, y)| (x + y) / 2.0).collect()
 }
 
-/// fold-level benchmark of baseline and upgrades; writes {out}.upg.tsv
+/// fold-level benchmark of ridge and the alternative models; writes {out}.upg.tsv
 #[allow(clippy::too_many_arguments)]
 pub fn run(a: &[String], z: &Z, zt: &Z, fold: &[i64], group: &[i64], excl: &HashSet<(usize, i64)>, out: &str) -> Result<()> {
     let t0 = std::time::Instant::now();

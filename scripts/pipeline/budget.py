@@ -1,4 +1,4 @@
-"""Step 7 summary: budget-aware panels vs designed / L1000 / random, targeted assay."""
+"""Summary: budget-aware panels vs designed / L1000 / random, targeted assay."""
 import sys, pandas as pd, numpy as np
 from scipy.stats import wilcoxon
 d = pd.read_csv(sys.argv[1] + ".sim.tsv", sep="\t"); d = d[d.assay == "targeted"]

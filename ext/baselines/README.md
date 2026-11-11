@@ -29,7 +29,7 @@ hubs for f, as in `src/main.rs`. Fold -9 uses all 9,866 perturbations.
   Minkowski distances, so it does not assume positive values.
 - Call: `gene_search(sce, n_genes_total = 680, nPC.selection = NULL)` with package defaults otherwise
   (n.neigh = 5, p.minkowski = 3, nPC.all = 50). The 200 and 500 panels are the first 200 and 500 genes by rank.
-- Deviations:
+- Notes on the run:
   1. BiocNeighbors 1.22.0 and bluster 1.14.0 (Bioconductor 3.19) are loaded from a private library, because
      `gene_search` fails with BiocNeighbors 2.0.1 at its second step, also on the package example.
   2. Reference rows are subsampled to 3,000 per fold (`genebasis_export.py --sub 3000`, numpy default_rng(0)),

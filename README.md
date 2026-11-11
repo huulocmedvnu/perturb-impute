@@ -14,7 +14,7 @@ The repository holds the command-line tool, the analysis pipeline of the manuscr
 pip install -r environment/requirements.txt    # numpy, pandas, scipy, plotly, kaleido
 make build      # compiles the Rust binaries (about 40 s on first build)
 make test       # unit tests and the command-line workflow on toy data (under 10 s after the build)
-make verify     # recomputes 154 numbers of the manuscript from source_data/ (a few seconds)
+make verify     # recomputes 162 numbers of the manuscript from source_data/ (a few seconds)
 make figures    # regenerates Figs. 2 to 8 and Fig. S1 from source_data/ into output/ (about 10 s)
 make all        # the four steps in sequence
 ```
