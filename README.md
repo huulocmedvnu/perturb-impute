@@ -71,7 +71,7 @@ The standard panel holds 52% of the UMIs of a K562 control cell and the low-budg
 
 ## Deliverables (`deliverables/`)
 
-- `Table_S2_Panels.tsv`: standard and low-budget panels of 200 and 500 genes from the K562 genome-wide atlas (9,866 perturbations, 7,094 genes), in selection order, with Ensembl gene identifiers (GENCODE v44, where available), control-cell UMI fractions and the variance explained under the reference model.
+- `Table_S2_Panels.tsv`: standard and low-budget panels of 200 and 500 genes from the K562 genome-wide atlas (9,866 perturbations, 7,094 genes), in selection order, with Ensembl gene identifiers (GENCODE v44, and GENCODE v32 for symbols absent from v44), control-cell UMI fractions and the variance explained under the reference model.
 - `Table_S3_Gene_INFO_Scores.tsv`: for all 7,094 genes and both 500-gene panels, the K562 INFO score, calibration slope and error variance from the grouped inner holdout, and the observed per-gene correlation in RPE1, HepG2 and Jurkat cells (half 0 imputed, half 1 measured, perturbations whose halves correlate at 0.2 or more). For HepG2 and Jurkat cells, imputation used the panel genes measured there (450 of 500 standard and 392 of 500 low-budget genes).
 - `models/k562_500_standard.bin`, `models/k562_500_lowbudget.bin`: pre-trained models (28.6 MB each).
 - `inputs/`: control-cell UMI fractions and squared coefficients of variation (K562 essential-gene screen), gene identifiers and perturbation groups.
@@ -94,6 +94,7 @@ The analysis pipeline is the `panelimp` binary (`cargo build --release`, command
 
 - Pseudobulk z-scores: `dosecurve cache <screen.h5ad> <cache_dir>` (https://github.com/huulocmedvnu/dosecurve) writes a cell cache, `preprocess pb <cache_dir> <pb>` computes mean CP10k per perturbation over all cells and two interleaved halves, and `preprocess z --pb <pb> --genes <genes.txt> --out <z>` computes z-scores against non-targeting control cells (crate `preprocess/`).
 - `panelimp folds` builds the complex-aware cross-validation folds from the z-scores and CORUM.
+- `panelimp mtx2cache`, `panelimp real` and `panelimp realcells` (driver `scripts/real.sh`) convert the paired whole-transcriptome and L1000-enriched libraries of GSE146194 (exp7, exp11) and compare the readouts; `realsum` and `cellsum` print the summaries.
 - `panelimp cv`, `panelimp de` and `panelimp sim` run panel selection with imputation, DE calls and the read-thinning simulation. `scripts/ms_numbers.py` collects the summary numbers.
 - `orion-ingest` and `orion/scripts/*.sh` process the X-Atlas/Orion HCT116 and HEK293T atlases. `panelimp multi` and `panelimp vcm` run the pooled-reference and cross-cell-line transfer analyses.
 - `scripts/baselines/` contains the highly variable gene and geneBasis baselines (see `ext/baselines/README.md`).

@@ -10,7 +10,7 @@ const MED_CHI2_1: f64 = 0.454936423119572;
 
 /// sums of CP10k over cells for each (group, half): returns ng x 2 x ncol
 #[allow(clippy::too_many_arguments)]
-fn pseudobulk(c: &Cache, groups: &[usize], colmap: &[i32], ncol: usize, rate: &[f64], wt: bool, q: f64, seed: u64) -> Vec<f64> {
+pub(crate) fn pseudobulk(c: &Cache, groups: &[usize], colmap: &[i32], ncol: usize, rate: &[f64], wt: bool, q: f64, seed: u64) -> Vec<f64> {
     // work items: (group slot, half, cells)
     let mut items: Vec<(usize, usize, Vec<u32>)> = vec![];
     for (s, &gid) in groups.iter().enumerate() {
@@ -62,7 +62,7 @@ fn pseudobulk(c: &Cache, groups: &[usize], colmap: &[i32], ncol: usize, rate: &[
 }
 
 /// z for half 0 and half 1 of each query group (query = groups[1..], groups[0] = control)
-fn zhalves(c: &Cache, groups: &[usize], sums: &[f64], ncol: usize) -> (Vec<f64>, Vec<f64>) {
+pub(crate) fn zhalves(c: &Cache, groups: &[usize], sums: &[f64], ncol: usize) -> (Vec<f64>, Vec<f64>) {
     let n = |s: usize| c.groups[groups[s]].2;
     let nq = groups.len() - 1;
     let nc = n(0) as f64;
@@ -103,7 +103,7 @@ fn ridge_diag(c: &[f64], g: usize, s: &[usize], u: &[usize], alpha: f64, extra: 
 }
 
 /// alpha on inner holdout (as eval_panel) and final ridge weights (|u| x k)
-fn fit(z: &Z, gr: &Grams, inner_ho: &[usize], p: &Panel, u: &[usize]) -> Result<(f64, Vec<f64>)> {
+pub(crate) fn fit(z: &Z, gr: &Grams, inner_ho: &[usize], p: &Panel, u: &[usize]) -> Result<(f64, Vec<f64>)> {
     let g = z.genes.len();
     let nu = u.len();
     let truth = z.mat(2, inner_ho, u);
@@ -163,7 +163,7 @@ fn greedy_cap(gr: &Grams, nref: usize, g: usize, k: usize, nz: &[f64], sh: &[f64
 }
 
 /// per-row metrics: r, specific r, matched DE (top n_de by |v|) true positives and sign discordance
-fn metrics(v: &[f64], t: &[f64], basis: &[Vec<f64>]) -> (f64, f64, usize, usize, usize) {
+pub(crate) fn metrics(v: &[f64], t: &[f64], basis: &[Vec<f64>]) -> (f64, f64, usize, usize, usize) {
     let nde = t.iter().filter(|x| x.abs() > DE_Z).count();
     let mut o: Vec<usize> = (0..v.len()).collect();
     o.sort_by(|&a, &b| v[b].abs().partial_cmp(&v[a].abs()).unwrap());

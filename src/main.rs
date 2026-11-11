@@ -10,6 +10,7 @@ mod de;
 mod folds;
 mod multi;
 mod vcm;
+mod real;
 
 use anyhow::{anyhow, bail, Result};
 use rayon::prelude::*;
@@ -565,6 +566,9 @@ fn main() -> Result<()> {
     if cmd == "multitest" { return multi::multitest(&a); }
     if cmd == "vcm" { return vcm::run(&a); }
     if cmd == "vcmsum" { return vcm::summary(&a); }
+    if cmd == "mtx2cache" { return real::mtx2cache(&a); }
+    if cmd == "realsum" { return real::summary(&a); }
+    if cmd == "cellsum" { return real::cellsum(&a); }
     let z = Z::load(&req(&a, "--z")?)?;
     let l1000: HashSet<String> = std::fs::read_to_string(req(&a, "--l1000")?)?.lines().map(String::from).collect();
     let n_lm = z.genes.iter().filter(|g| l1000.contains(*g)).count();
@@ -588,7 +592,7 @@ fn main() -> Result<()> {
     let mut fold = vec![-1i64; z.perts.len()];
     let mut group = vec![-1i64; z.perts.len()];
     let mut excl: HashSet<(usize, i64)> = HashSet::new();
-    if cmd == "cv" || cmd == "sim" || cmd == "upg" || cmd == "de" || cmd == "example" {
+    if cmd == "real" || cmd == "realcells" || cmd == "cv" || cmd == "sim" || cmd == "upg" || cmd == "de" || cmd == "example" {
         for l in std::fs::read_to_string(req(&a, "--folds")?)?.lines().skip(1) {
             let f: Vec<&str> = l.split('\t').collect();
             if let Some(&i) = pi.get(f[0]) { group[i] = f[1].parse()?; fold[i] = f[2].parse()?; }
@@ -674,6 +678,8 @@ fn main() -> Result<()> {
             Some(p) => { let zt = Z::load(&p)?; if zt.genes != z.genes { bail!("gene order differs") } upg::run(&a, &z, &zt, &fold, &group, &excl, &out)? }
             None => upg::run(&a, &z, &z, &fold, &group, &excl, &out)?,
         },
+        "realcells" => real::cells(&a, &z, &fold, &group, &excl, &l1000, &out)?,
+        "real" => real::run(&a, &z, &fold, &group, &excl, &l1000, &out)?,
         "sim" => sim::run(&a, &z, &fold, &group, &excl, &l1000, &sizes, &out)?,
         _ => bail!("usage: panelimp cv|transfer|sim|pbdump ..."),
     }
