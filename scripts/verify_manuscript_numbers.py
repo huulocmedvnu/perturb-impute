@@ -154,6 +154,29 @@ check(S, "pooled transferred profile in RPE1, DE found", "29%", V[("all", "RPE1"
 in_range(S, "pooled transferred profile, specific r outside panel", "0.19", "0.23", [V[("out", c, "copy_pooled")][0] for c in ("RPE1", "HepG2", "Jurkat", "HCT116", "HEK293T")], "summary")
 in_range(S, "panel imputation, specific r outside panel", "0.11", "0.14", [V[("out", c, "panel")][0] for c in ("RPE1", "HepG2", "Jurkat", "HCT116", "HEK293T")], "summary")
 
+# ---------------- alternative imputation models and the guide-target prior (Table S1, Note S1), summaries of the Rust tool
+A = pd.read_csv(os.path.join(SD, "alt", "benchmark.tsv"), sep="\t"); PA = pd.read_csv(os.path.join(SD, "alt", "paired_against_ridge.tsv"), sep="\t"); GG = pd.read_csv(os.path.join(SD, "alt", "gene_graphs.tsv"), sep="\t")
+K = A[A.dataset.str.startswith("K562")].groupby("method").mean(numeric_only=True); S = "Effect size ranking"
+RID, PRI = "ridge (all cells), baseline", "H2c + expression deciles"
+check(S, "ridge, mean size rank, five folds", "0.073", K.loc[RID, "size_rank_mean"], "summary"); check(S, "two measured halves, mean size rank", "0.198", K.loc["direct (input half)", "size_rank_mean"], "summary")
+check(S, "whole half on 160 programs, mean size rank", "0.095", K.loc["whole half on 160 programs", "size_rank_mean"], "summary")
+alt = [K.loc[m, "size_rank_mean"] for m in ("H1 cross-half ridge", "H3 local experts", "H4 cross-half + quadratic")] + list(GG[GG.method.str.startswith("ridge +")].groupby("method").size_rank_mean.mean())
+in_range(S, "alternative models, mean size rank", "0.070", "0.075", alt, "summary")
+check(S, "guide-target prior, mean size rank", "0.139", K.loc[PRI, "size_rank_mean"], "summary")
+check(S, "recovery, ridge (mean of fold medians)", "0.883", K.loc[RID, "recovery"], "summary"); check(S, "recovery, guide-target prior", "0.928", K.loc[PRI, "recovery"], "summary")
+check(S, "DE found outside the panel, ridge", "0.206", K.loc[RID, "de_recall"], "summary"); check(S, "DE found outside the panel, guide-target prior", "0.229", K.loc[PRI, "de_recall"], "summary")
+check(S, "opposite sign, ridge", "0.141", K.loc[RID, "opposite_sign"], "summary"); check(S, "opposite sign, guide-target prior", "0.126", K.loc[PRI, "opposite_sign"], "summary")
+hp = PA[PA.method.str.startswith("H2c")].set_index("dataset")
+check(S, "guide-target prior against ridge, largest P of the five folds", "P < 1e-17", hp[hp.index.str.startswith("K562")].size_rank_p.max(), "summary")
+for ds, e0, e1 in [("RPE1", "0.095", "0.126"), ("HepG2", "0.055", "0.077"), ("Jurkat", "0.108", "0.150")]:
+    x = A[A.dataset == ds].set_index("method"); check(S, f"{ds}, mean size rank, ridge", e0, x.loc[RID, "size_rank_mean"], "summary"); check(S, f"{ds}, mean size rank, guide-target prior", e1, x.loc[PRI, "size_rank_mean"], "summary")
+check(S, "cross-half ridge, recovery", "0.820", K.loc["H1 cross-half ridge", "recovery"], "summary")
+dg = open(os.path.join(SD, "alt", "diagnostic_fold0.txt")).read(); num = lambda pat: float(re.search(pat, dg).group(1))
+check(S, "reproducible share of the variance of a half", "8.3%", num(r"all programs:.*= ([\d.]+)% of the total") / 100, "summary"); check(S, "reproducible share after removal of 10 programs", "3.5%", num(r"specific.*= ([\d.]+)% of the total") / 100, "summary")
+check(S, "knockdowns with the target gene outside the panel", "511", num(r"outside the panel for (\d+) of"), "summary"); check(S, "inner holdout knockdowns", "787", num(r"inner holdout (\d+),"), "summary")
+check(S, "median z of the target gene", "-3.8", num(r"median measured z (-[\d.]+)"), "summary"); check(S, "median z of genes within 2 kb", "-2.05", num(r"0 to 2 kb from the target: \d+ pairs, median z (-[\d.]+)"), "summary")
+check(S, "leading eigenvalue of the noise covariance", "108.6", num(r"leading noise eigenvalues ([\d.]+)"), "summary")
+
 # ---------------- values that need the full atlas
 S = "Reference atlas"
 check(S, "programs above the noise level, K562", "172", N["mp"]["n_programs"], "json"); check(S, "genes analysed", "7,094", N["noise"]["n_genes_universe"], "json"); check(S, "knockdowns", "9,866", N["noise"]["n_perts_gwps"], "json")

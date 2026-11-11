@@ -5,7 +5,9 @@
 //!                                [--umi-fraction FILE] [--gene-ids FILE] --out panel.tsv
 //!   perturb-impute fit-reference --ref REF --panel panel.tsv [--groups FILE]
 //!                                [--noise FILE --budget 0.02] --out model.bin
+//!                                [--tss-annotation FILE] [--expression FILE]   (guide-target prior)
 //!   perturb-impute impute        --model model.bin --input panel_matrix.tsv --out-dir DIR
+//!                                [--guide-target [--target-map FILE] [--prior-scale 1.0]]
 //!   perturb-impute validate      --model model.bin --input-z PREFIX --out per_gene.tsv
 //!   perturb-impute project       --ref REF --input matrix.tsv [--programs 160] --out projected.tsv
 //!
@@ -33,19 +35,20 @@ impl Args {
 
 // ------------------------------------------------------------------ data
 /// Profiles: perturbations x genes, one layer (all cells) or three (all, half 0, half 1).
-struct Prof { perts: Vec<String>, genes: Vec<String>, layers: Vec<Vec<f32>> }
+/// values in memory (text matrix) or memory-mapped (z-score prefix), so that a large reference is not copied
+enum Store { Mem(Vec<Vec<f32>>), Map(memmap2::Mmap, usize) }
+struct Prof { perts: Vec<String>, genes: Vec<String>, store: Store }
 impl Prof {
     fn load(path: &str) -> Result<Prof> {
         if std::path::Path::new(&format!("{path}.z.f32")).exists() {
             let col0 = |f: String| -> Result<Vec<String>> { Ok(std::fs::read_to_string(&f).with_context(|| f.clone())?.lines().skip(1).map(|l| l.split('\t').next().unwrap().to_string()).collect()) };
             let perts = col0(format!("{path}.meta.tsv"))?;
             let genes = col0(format!("{path}.genes.tsv"))?;
-            let raw = std::fs::read(format!("{path}.z.f32"))?;
-            let z: Vec<f32> = bytemuck::cast_slice::<u8, f32>(&raw).to_vec();
-            let pg = perts.len() * genes.len();
-            if z.len() % pg != 0 { bail!("{path}.z.f32 size does not match meta and genes") }
-            let layers = z.chunks(pg).map(|c| c.to_vec()).collect();
-            return Ok(Prof { perts, genes, layers });
+            let map = unsafe { memmap2::Mmap::map(&std::fs::File::open(format!("{path}.z.f32"))?)? };
+            let pg = perts.len() * genes.len() * 4;
+            if pg == 0 || map.len() % pg != 0 { bail!("{path}.z.f32 size does not match meta and genes") }
+            let nl = map.len() / pg;
+            return Ok(Prof { perts, genes, store: Store::Map(map, nl) });
         }
         let f = std::fs::File::open(path).with_context(|| format!("open {path}"))?;
         let mut lines = BufReader::new(f).lines();
@@ -60,10 +63,14 @@ impl Prof {
             if row.len() != genes.len() { bail!("row {} of {path} has {} values for {} genes", perts.len(), row.len(), genes.len()) }
             v.extend(row);
         }
-        Ok(Prof { perts, genes, layers: vec![v] })
+        Ok(Prof { perts, genes, store: Store::Mem(vec![v]) })
+    }
+    fn n_layers(&self) -> usize { match &self.store { Store::Mem(v) => v.len(), Store::Map(_, n) => *n } }
+    fn layer(&self, l: usize) -> &[f32] {
+        match &self.store { Store::Mem(v) => &v[l], Store::Map(m, n) => { let all: &[f32] = bytemuck::cast_slice(m); let len = all.len() / n; &all[l * len..(l + 1) * len] } }
     }
     fn mat(&self, layer: usize, rows: &[usize], cols: &[usize]) -> Vec<f64> {
-        let (g, l) = (self.genes.len(), &self.layers[layer]);
+        let (g, l) = (self.genes.len(), self.layer(layer));
         let mut m = vec![0.0; rows.len() * cols.len()];
         m.par_chunks_mut(cols.len().max(1)).zip(rows).for_each(|(r, &p)| { for (k, &j) in cols.iter().enumerate() { let v = l[p * g + j]; r[k] = if v.is_finite() { v as f64 } else { 0.0 }; } });
         m
@@ -224,6 +231,123 @@ impl Model {
     }
 }
 
+
+// ------------------------------------------------------------------ guide-target prior
+/// What a CRISPR interference guide does to its own target and to genes with a transcription start site
+/// within 2 kb, learned from the reference knockdowns whose target gene is measured: median z-score of the
+/// target by decile of its expression level, median z-score of the close neighbours, and the share of
+/// positive values (reported as local false sign rate). The gene table is a compact index of positions.
+const PRIOR_MAGIC: &[u8; 8] = b"PRIOR001";
+const NEAR_BP: i64 = 2000;
+struct Prior {
+    own_med: f32, own_pos: f32, near_med: f32, near_pos: f32,
+    cuts: Vec<f64>, bin_med: Vec<f32>, bin_pos: Vec<f32>,
+    chrs: Vec<String>,
+    genes: Vec<(String, u8, u32, u8)>, // symbol, chromosome index (255 unknown), TSS, expression decile (255 unknown)
+}
+fn med32(v: &mut [f32]) -> f32 { if v.is_empty() { return 0.0; } v.sort_by(|a, b| a.partial_cmp(b).unwrap()); let n = v.len(); if n % 2 == 1 { v[n / 2] } else { 0.5 * (v[n / 2 - 1] + v[n / 2]) } }
+fn pos32(v: &[f32]) -> f32 { if v.is_empty() { 0.5 } else { v.iter().filter(|x| **x > 0.0).count() as f32 / v.len() as f32 } }
+impl Prior {
+    /// `layer`: profiles of the reference used as observed values (held-out half when the reference has halves)
+    fn fit(p: &Prof, layer: usize, targets: &[usize], tss_file: Option<String>, expr_file: Option<String>) -> Result<Prior> {
+        let g = p.genes.len();
+        let mut chrs: Vec<String> = vec![];
+        let mut pos: HashMap<String, (u8, u32)> = HashMap::new();
+        if let Some(f) = tss_file {
+            let txt = std::fs::read_to_string(&f).with_context(|| f.clone())?;
+            let mut lines = txt.lines();
+            let hdr: Vec<&str> = lines.next().unwrap_or("").split('\t').collect();
+            let col = |n: &str| hdr.iter().position(|h| *h == n).ok_or_else(|| anyhow!("{f}: no column {n} (expected gene, chr, tss)"));
+            let (cg, cc, ct) = (col("gene")?, col("chr")?, col("tss")?);
+            for l in lines {
+                let x: Vec<&str> = l.split('\t').collect();
+                let Some(t) = x.get(ct).and_then(|v| v.parse::<f64>().ok()) else { continue };
+                let ci = match chrs.iter().position(|c| c == x[cc]) { Some(i) => i, None => { chrs.push(x[cc].to_string()); chrs.len() - 1 } };
+                if ci < 255 { pos.entry(x[cg].to_string()).or_insert((ci as u8, t as u32)); }
+            }
+        }
+        let mut expr: HashMap<String, f64> = HashMap::new();
+        if let Some(f) = expr_file { for l in std::fs::read_to_string(&f).with_context(|| f.clone())?.lines() { let x: Vec<&str> = l.split('\t').collect(); if let Some(v) = x.get(1).and_then(|v| v.parse::<f64>().ok()) { expr.insert(x[0].to_string(), v); } } }
+        let gi: HashMap<&str, usize> = p.genes.iter().enumerate().map(|(i, s)| (s.as_str(), i)).collect();
+        let is_target: HashSet<usize> = targets.iter().copied().collect();
+        let z = p.layer(layer);
+        // target gene of each reference knockdown, when it is an imputed gene
+        let (mut own, mut own_e): (Vec<f32>, Vec<(f64, f32)>) = (vec![], vec![]);
+        // imputed genes by chromosome, sorted by position
+        let mut by_chr: Vec<Vec<(u32, usize)>> = vec![vec![]; chrs.len()];
+        for &j in targets { if let Some(&(c, t)) = pos.get(&p.genes[j]) { by_chr[c as usize].push((t, j)); } }
+        for v in by_chr.iter_mut() { v.sort(); }
+        let mut near: Vec<f32> = vec![];
+        for (row, name) in p.perts.iter().enumerate() {
+            if let Some(&gj) = gi.get(name.as_str()) { if is_target.contains(&gj) { let v = z[row * g + gj]; if v.is_finite() { own.push(v); if let Some(&e) = expr.get(name) { own_e.push((e, v)); } } } }
+            if let Some(&(c, t)) = pos.get(name) {
+                let v = &by_chr[c as usize];
+                let lo = v.partition_point(|x| (x.0 as i64) <= t as i64 - NEAR_BP);
+                for &(t2, j) in &v[lo..] { if t2 as i64 >= t as i64 + NEAR_BP { break; } if p.genes[j] != *name { let x = z[row * g + j]; if x.is_finite() { near.push(x); } } }
+            }
+        }
+        if own.len() < 20 { bail!("guide-target prior: only {} reference perturbations are named after an imputed gene", own.len()) }
+        let (mut cuts, mut bin_med, mut bin_pos) = (vec![], vec![], vec![]);
+        if own_e.len() >= 100 {
+            own_e.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            for ch in own_e.chunks(own_e.len().div_ceil(10)) { let mut v: Vec<f32> = ch.iter().map(|x| x.1).collect(); cuts.push(ch.last().unwrap().0); bin_pos.push(pos32(&v)); bin_med.push(med32(&mut v)); }
+        }
+        let bin_of = |name: &str| -> u8 { match expr.get(name) { Some(&e) if !cuts.is_empty() => cuts.iter().position(|&c| e <= c).unwrap_or(cuts.len() - 1) as u8, _ => 255 } };
+        let mut names: Vec<&String> = pos.keys().chain(expr.keys()).collect();
+        names.sort(); names.dedup();
+        let genes = names.into_iter().map(|n| { let (c, t) = pos.get(n).copied().unwrap_or((255, 0)); (n.clone(), c, t, bin_of(n)) }).collect();
+        eprintln!("fit-reference: guide-target prior from {} knockdowns of imputed genes (median z {:.2}, {} expression deciles) and {} neighbour pairs within {} kb (median z {:.2})",
+            own.len(), med32(&mut own.clone()), cuts.len(), near.len(), NEAR_BP / 1000, med32(&mut near.clone()));
+        Ok(Prior { own_pos: pos32(&own), own_med: med32(&mut own), near_pos: pos32(&near), near_med: med32(&mut near), cuts, bin_med, bin_pos, chrs, genes })
+    }
+    fn append(&self, path: &str) -> Result<()> {
+        let mut w = BufWriter::new(std::fs::OpenOptions::new().append(true).open(path)?);
+        w.write_all(PRIOR_MAGIC)?;
+        for v in [self.own_med, self.own_pos, self.near_med, self.near_pos] { w.write_all(&v.to_le_bytes())?; }
+        w.write_all(&(self.cuts.len() as u32).to_le_bytes())?;
+        for v in &self.cuts { w.write_all(&v.to_le_bytes())?; }
+        for v in self.bin_med.iter().chain(&self.bin_pos) { w.write_all(&v.to_le_bytes())?; }
+        w.write_all(&(self.chrs.len() as u32).to_le_bytes())?; for c in &self.chrs { wstr(&mut w, c)?; }
+        w.write_all(&(self.genes.len() as u32).to_le_bytes())?;
+        for (n, c, t, b) in &self.genes { wstr(&mut w, n)?; w.write_all(&[*c])?; w.write_all(&t.to_le_bytes())?; w.write_all(&[*b])?; }
+        Ok(())
+    }
+    /// the prior section follows the model; None for a model fitted without it
+    fn load(path: &str) -> Result<Option<Prior>> {
+        let mut b = vec![];
+        std::fs::File::open(path).with_context(|| path.to_string())?.read_to_end(&mut b)?;
+        let Some(start) = b.windows(8).rposition(|w| w == PRIOR_MAGIC) else { return Ok(None) };
+        let mut o = start + 8;
+        let f32r = |o: &mut usize| -> f32 { let v = f32::from_le_bytes(b[*o..*o + 4].try_into().unwrap()); *o += 4; v };
+        let u32r = |o: &mut usize| -> u32 { let v = u32::from_le_bytes(b[*o..*o + 4].try_into().unwrap()); *o += 4; v };
+        let sr = |o: &mut usize| -> String { let n = u32::from_le_bytes(b[*o..*o + 4].try_into().unwrap()) as usize; let s = String::from_utf8_lossy(&b[*o + 4..*o + 4 + n]).into_owned(); *o += 4 + n; s };
+        let (own_med, own_pos, near_med, near_pos) = (f32r(&mut o), f32r(&mut o), f32r(&mut o), f32r(&mut o));
+        let nb = u32r(&mut o) as usize;
+        let cuts = (0..nb).map(|_| { let v = f64::from_le_bytes(b[o..o + 8].try_into().unwrap()); o += 8; v }).collect();
+        let bin_med = (0..nb).map(|_| f32r(&mut o)).collect();
+        let bin_pos = (0..nb).map(|_| f32r(&mut o)).collect();
+        let nc = u32r(&mut o) as usize; let chrs = (0..nc).map(|_| sr(&mut o)).collect();
+        let ng = u32r(&mut o) as usize;
+        let genes = (0..ng).map(|_| { let n = sr(&mut o); let c = b[o]; o += 1; let t = u32r(&mut o); let bn = b[o]; o += 1; (n, c, t, bn) }).collect();
+        Ok(Some(Prior { own_med, own_pos, near_med, near_pos, cuts, bin_med, bin_pos, chrs, genes }))
+    }
+    /// entries to overwrite for one knockdown: (index of the imputed gene, value, share of positive values, kind)
+    fn entries(&self, target: &str, tix: &HashMap<&str, usize>, gix: &HashMap<&str, usize>, by_chr: &[Vec<(u32, usize)>]) -> Vec<(usize, f32, f32, &'static str)> {
+        let mut out = vec![];
+        let rec = gix.get(target).map(|&i| &self.genes[i]);
+        if let Some(&j) = tix.get(target) {
+            let b = rec.map(|r| r.3).unwrap_or(255);
+            if b != 255 && (b as usize) < self.bin_med.len() { out.push((j, self.bin_med[b as usize], self.bin_pos[b as usize], "target")); } else { out.push((j, self.own_med, self.own_pos, "target")); }
+        }
+        if let Some(r) = rec { if r.1 != 255 {
+            let v = &by_chr[r.1 as usize];
+            let lo = v.partition_point(|x| (x.0 as i64) <= r.2 as i64 - NEAR_BP);
+            for &(t2, j) in &v[lo..] { if t2 as i64 >= r.2 as i64 + NEAR_BP { break; } if tix.get(target) != Some(&j) { out.push((j, self.near_med, self.near_pos, "neighbour")); } }
+        } }
+        out
+    }
+}
+
 fn cmd_fit(a: &Args) -> Result<()> {
     let t0 = Instant::now();
     let p = Prof::load(&a.req("--ref")?)?;
@@ -247,9 +371,13 @@ fn cmd_fit(a: &Args) -> Result<()> {
     let (itr, iho) = inner_split(&p, &groups);
     let all: Vec<usize> = (0..p.perts.len()).collect();
     let cols: Vec<usize> = (0..g).collect();
-    let c = la::gram(&p.mat(0, &all, &cols), all.len(), g);
-    let cin = la::gram(&p.mat(0, &itr, &cols), itr.len(), g);
-    let halves = p.layers.len() >= 3;
+    // one Gram matrix at a time; only the panel block and the target-by-panel block are kept
+    let blocks = |rows: &[usize]| -> (Vec<f64>, Vec<f64>) {
+        let cm = la::gram(&p.mat(0, rows, &cols), rows.len(), g);
+        (s.iter().flat_map(|&i| s.iter().map(|&j| cm[i * g + j]).collect::<Vec<_>>()).collect(), u.iter().flat_map(|&i| s.iter().map(|&j| cm[i * g + j]).collect::<Vec<_>>()).collect())
+    };
+    let (cin, c) = (blocks(&itr), blocks(&all));
+    let halves = p.n_layers() >= 3;
     let (lin, ltr) = if halves { (1, 2) } else { (0, 0) };
     // optional heteroscedastic panel noise at a targeted sequencing budget
     let budget: f64 = a.get("--budget").map(|v| v.parse()).transpose()?.unwrap_or(1.0);
@@ -268,8 +396,8 @@ fn cmd_fit(a: &Args) -> Result<()> {
         }
         eprintln!("fit-reference: budget {budget}, panel UMI share {share:.4}, targeted rate {rate:.4}");
     }
-    let mk = |cm: &[f64], n: u64, alpha: f64| Model { n_ref: n, alpha, budget, panel: s.iter().map(|&j| p.genes[j].clone()).collect(), targets: u.iter().map(|&j| p.genes[j].clone()).collect(),
-        css: s.iter().flat_map(|&i| s.iter().map(move |&j| cm[i * g + j])).collect(), cus: u.iter().flat_map(|&i| s.iter().map(move |&j| cm[i * g + j])).collect(),
+    let mk = |cm: &(Vec<f64>, Vec<f64>), n: u64, alpha: f64| Model { n_ref: n, alpha, budget, panel: s.iter().map(|&j| p.genes[j].clone()).collect(), targets: u.iter().map(|&j| p.genes[j].clone()).collect(),
+        css: cm.0.clone(), cus: cm.1.clone(),
         extra: extra.iter().map(|e| e * n as f64 / all.len() as f64).collect(), scale: scale.clone(), info: vec![], slope: vec![], errvar: vec![] };
     // alpha, INFO, calibration on the inner holdout
     let xh: Vec<f64> = { let x = p.mat(lin, &iho, &s); x.chunks(k).flat_map(|r| r.iter().zip(&scale).map(|(v, sc)| v * sc).collect::<Vec<_>>()).collect() };
@@ -298,6 +426,7 @@ fn cmd_fit(a: &Args) -> Result<()> {
     model.errvar = stats.iter().map(|s| s.2).collect();
     let out = a.req("--out")?;
     model.save(&out)?;
+    if a.get("--tss-annotation").is_some() || a.get("--expression").is_some() { Prior::fit(&p, ltr, &u, a.get("--tss-annotation"), a.get("--expression"))?.append(&out)?; }
     let size = std::fs::metadata(&out)?.len() as f64 / 1e6;
     eprintln!("fit-reference: {} reference perturbations ({} inner training, {nh} inner holdout{}), {k} panel genes, {nu} targets, alpha {alpha}, median INFO {:.3}; {out} {size:.1} MB in {:.1}s",
         all.len(), itr.len(), if halves { ", half 0 -> half 1" } else { ", single layer: INFO is not cross-cell" }, { let mut v: Vec<f64> = model.info.iter().copied().filter(|x| x.is_finite()).collect(); v.sort_by(|a, b| a.partial_cmp(b).unwrap()); v[v.len() / 2] }, t0.elapsed().as_secs_f64());
@@ -335,6 +464,29 @@ fn cmd_impute(a: &Args) -> Result<()> {
     let mut im = la::gemm(false, true, n, nu, mm, &x, &wt);
     im.par_chunks_mut(nu).for_each(|r| for j in 0..nu { r[j] *= m.slope[j]; });
     let oor = m.oor(&av, &x, n)?;
+    // optional guide-target prior: the target gene of each knockdown and genes with a TSS within 2 kb take the values
+    // observed for reference knockdowns; only these entries change
+    let mut prior_sign: HashMap<(usize, usize), f64> = HashMap::new();
+    let mut applied: Vec<String> = vec![];
+    if a.0.iter().any(|x| x == "--guide-target") {
+        let pr = Prior::load(&a.req("--model")?)?.ok_or_else(|| anyhow!("this model has no guide-target prior; refit with --tss-annotation and --expression"))?;
+        let scale: f32 = a.get("--prior-scale").map(|v| v.parse()).transpose()?.unwrap_or(1.0);
+        let map: HashMap<String, String> = match a.get("--target-map") { Some(f) => read_map(&f)?, None => HashMap::new() };
+        let tix: HashMap<&str, usize> = m.targets.iter().enumerate().map(|(j, s)| (s.as_str(), j)).collect();
+        let gix: HashMap<&str, usize> = pr.genes.iter().enumerate().map(|(i, r)| (r.0.as_str(), i)).collect();
+        let mut by_chr: Vec<Vec<(u32, usize)>> = vec![vec![]; pr.chrs.len()];
+        for r in &pr.genes { if r.1 != 255 { if let Some(&j) = tix.get(r.0.as_str()) { by_chr[r.1 as usize].push((r.2, j)); } } }
+        for v in by_chr.iter_mut() { v.sort(); }
+        for i in 0..n {
+            let target = map.get(&p.perts[i]).unwrap_or(&p.perts[i]);
+            for (j, val, pos, kind) in pr.entries(target, &tix, &gix, &by_chr) {
+                im[i * nu + j] = (val * scale) as f64;
+                prior_sign.insert((i, j), if val < 0.0 { pos as f64 } else { 1.0 - pos as f64 });
+                applied.push(format!("{}\t{}\t{kind}\t{:.4}", p.perts[i], m.targets[j], val * scale));
+            }
+        }
+        eprintln!("impute: guide-target prior set {} entries ({} perturbations with a target or neighbour among the imputed genes)", applied.len(), { let mut s: Vec<&str> = applied.iter().map(|l| l.split('\t').next().unwrap()).collect(); s.dedup(); s.len() });
+    }
     let tcomp = t1.elapsed().as_secs_f64();
     let dir = a.req("--out-dir")?;
     std::fs::create_dir_all(&dir)?;
@@ -346,7 +498,8 @@ fn cmd_impute(a: &Args) -> Result<()> {
         Ok(())
     };
     write_mat("imputed_zscores.tsv", &|i, j| im[i * nu + j], 4)?;
-    write_mat("imputed_lfsr.tsv", &|i, j| phi(-im[i * nu + j].abs() / m.errvar[j].sqrt()), 4)?;
+    write_mat("imputed_lfsr.tsv", &|i, j| prior_sign.get(&(i, j)).copied().unwrap_or_else(|| phi(-im[i * nu + j].abs() / m.errvar[j].sqrt())), 4)?;
+    if !applied.is_empty() { std::fs::write(format!("{dir}/prior_applied.tsv"), format!("perturbation\tgene\tkind\tz\n{}\n", applied.join("\n")))?; }
     let mut w = BufWriter::new(std::fs::File::create(format!("{dir}/perturbation_qc.tsv"))?);
     writeln!(w, "perturbation\toor_score\tpanel_norm\tpanel_genes_used")?;
     for i in 0..n { writeln!(w, "{}\t{:.6}\t{:.6}\t{}", p.perts[i], oor[i], x[i * mm..(i + 1) * mm].iter().map(|v| v * v).sum::<f64>().sqrt(), mm)?; }
@@ -376,7 +529,7 @@ fn cmd_validate(a: &Args) -> Result<()> {
     let tr = p.mat(ltr, &rows, &present.iter().map(|&j| tj[j].unwrap()).collect::<Vec<_>>());
     let np = present.len();
     // responding perturbations: imputed and measured profiles both available, measured halves agree (r >= min_r)
-    let h0 = p.mat(1.min(p.layers.len() - 1), &rows, &present.iter().map(|&j| tj[j].unwrap()).collect::<Vec<_>>());
+    let h0 = p.mat(1.min(p.n_layers() - 1), &rows, &present.iter().map(|&j| tj[j].unwrap()).collect::<Vec<_>>());
     let resp: Vec<usize> = (0..n).filter(|&i| pearson(&h0[i * np..(i + 1) * np], &tr[i * np..(i + 1) * np]) >= min_r).collect();
     let r: Vec<f64> = (0..np).into_par_iter().map(|q| { let j = present[q]; pearson(&resp.iter().map(|&i| im[i * nu + j]).collect::<Vec<_>>(), &resp.iter().map(|&i| tr[i * np + q]).collect::<Vec<_>>()) }).collect();
     let mut w = BufWriter::new(std::fs::File::create(a.req("--out")?)?);
@@ -415,7 +568,7 @@ fn cmd_project(a: &Args) -> Result<()> {
     for (j, name) in r.genes.iter().enumerate() {
         if let Some(&c) = gi.get(name.as_str()) {
             matched += 1;
-            for i in 0..nx { let v = x.layers[0][i * gx + c]; if v.is_finite() { m[i * g + j] = v as f64; } }
+            for i in 0..nx { let v = x.layer(0)[i * gx + c]; if v.is_finite() { m[i * g + j] = v as f64; } }
         }
     }
     if matched < g / 2 { bail!("only {matched} of {g} reference genes found in the input") }
@@ -433,7 +586,11 @@ const HELP: &str = "perturb-impute: gene panels and transcriptome-wide imputatio
                 [--umi-fraction gene_fraction.tsv] [--gene-ids symbol_id.tsv]
   fit-reference --ref REF --panel panel.tsv --out model.bin [--groups pert_group.tsv]
                 [--noise gene_cv2.tsv --budget 0.02]
+                [--tss-annotation tss.tsv] [--expression gene_value.tsv]   store the guide-target prior
   impute        --model model.bin --input matrix.tsv --out-dir DIR      (or --input-z PREFIX [--layer 0])
+                [--guide-target [--target-map pert_gene.tsv] [--prior-scale 1.0]]
+                (the target gene of each knockdown and genes with a TSS within 2 kb are set to the
+                 values observed for reference knockdowns; default: ridge imputation alone)
   validate      --model model.bin --input-z PREFIX --out per_gene_r.tsv [--layer 1 --truth-layer 2]
   project       --ref REF --input matrix.tsv --out projected.tsv [--programs 160]
                 (whole-transcriptome profiles projected on the leading reference programs)

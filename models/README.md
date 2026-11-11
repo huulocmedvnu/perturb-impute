@@ -20,6 +20,10 @@ perturb-impute fit-reference --ref <k562 z-score prefix> --panel panels/low-budg
   --out models/k562_500_lowbudget.bin
 ```
 
+The two K562 models also hold the guide-target prior (`--tss-annotation models/inputs/tss_grch38_refseq_select.tsv --expression models/inputs/control_umi_fraction_k562.tsv` added to the commands above; 6,312 knockdowns of imputed genes and 683 pairs of a knockdown and a gene within 2 kb). The prior is stored after the ridge model, which is unchanged, and it is used only with `impute --guide-target`. The X-Atlas/Orion models do not hold it.
+
+`inputs/tss_grch38_refseq_select.tsv` lists the transcription start sites of RefSeq Select transcripts on GRCh38 (gene, chromosome, strand, position).
+
 `inputs/` holds what these commands need besides the z-scores: control-cell UMI fractions and squared
 coefficients of variation (K562 essential-gene screen), Ensembl identifiers and perturbation groups
 (CORUM complexes and correlated profiles). `scripts/pipeline/xatlas_models.sh` builds the X-Atlas/Orion models.

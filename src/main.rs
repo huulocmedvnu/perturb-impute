@@ -11,6 +11,9 @@ mod folds;
 mod multi;
 mod vcm;
 mod real;
+mod causal;
+mod explore;
+mod explore_test;
 
 use anyhow::{anyhow, bail, Result};
 use rayon::prelude::*;
@@ -566,6 +569,8 @@ fn main() -> Result<()> {
     if cmd == "multitest" { return multi::multitest(&a); }
     if cmd == "vcm" { return vcm::run(&a); }
     if cmd == "vcmsum" { return vcm::summary(&a); }
+    if cmd == "causal" { return causal::run(&a); }
+    if cmd == "explore" { return explore::run(&a); }
     if cmd == "mtx2cache" { return real::mtx2cache(&a); }
     if cmd == "realsum" { return real::summary(&a); }
     if cmd == "cellsum" { return real::cellsum(&a); }

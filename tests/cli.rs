@@ -87,3 +87,67 @@ fn select_fit_impute_project() {
     assert!(r_proj > r_raw, "projected profiles ({r_proj}) should agree with the truth better than measured ones ({r_raw})");
     std::fs::remove_dir_all(&dir).ok();
 }
+
+/// guide-target prior: reference knockdowns named after genes give the value of the target gene and of genes
+/// with a TSS within 2 kb; `impute --guide-target` overwrites exactly these entries and nothing else
+#[test]
+fn guide_target_prior() {
+    let dir = std::env::temp_dir().join(format!("perturb_impute_prior_{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    // reference: knockdown i is named after gene G{i}, with an on-target effect of -6; gene i sits at position 5000 * i,
+    // and the odd gene i + 1 at 1000 bp from the even gene i, so every even target has one neighbour within 2 kb
+    let txt = std::fs::read_to_string(data("toy_reference.tsv")).unwrap();
+    let mut lines = txt.lines();
+    let header = lines.next().unwrap().to_string();
+    let genes: Vec<&str> = header.split('\t').skip(1).collect();
+    let mut out = vec![header.clone()];
+    for (i, l) in lines.enumerate() {
+        let mut f: Vec<String> = l.split('\t').map(String::from).collect();
+        f[0] = genes[i].to_string();
+        f[i + 1] = "-6.000".into();
+        if i % 2 == 0 { f[i + 2] = "-2.500".into(); }
+        out.push(f.join("\t"));
+    }
+    let (reference, tss, expr, panel, model, imp, imp0) = (dir.join("ref.tsv"), dir.join("tss.tsv"), dir.join("expr.tsv"), dir.join("panel.tsv"), dir.join("model.bin"), dir.join("with_prior"), dir.join("plain"));
+    std::fs::write(&reference, out.join("\n") + "\n").unwrap();
+    let pos = |i: usize| if i % 2 == 0 { 5000 * i } else { 5000 * (i - 1) + 1000 };
+    std::fs::write(&tss, format!("gene\tchr\tstrand\ttss\n{}\n", genes.iter().enumerate().map(|(i, g)| format!("{g}\tchr1\t+\t{}", pos(i))).collect::<Vec<_>>().join("\n"))).unwrap();
+    std::fs::write(&expr, genes.iter().enumerate().map(|(i, g)| format!("{g}\t{}", i + 1)).collect::<Vec<_>>().join("\n") + "\n").unwrap();
+    run(&["select", "--ref", s(&reference), "--panel-size", "40", "--out", s(&panel)]);
+    run(&["fit-reference", "--ref", s(&reference), "--panel", s(&panel), "--tss-annotation", s(&tss), "--expression", s(&expr), "--out", s(&model)]);
+    // screen: knockdowns of genes that are not in the reference (indices 240 and above)
+    let scr = std::fs::read_to_string(data("toy_screen_input.tsv")).unwrap();
+    let rows: Vec<String> = scr.lines().enumerate().map(|(i, l)| if i == 0 { l.to_string() } else { let mut f: Vec<&str> = l.split('\t').collect(); f[0] = genes[240 + i - 1]; f.join("\t") }).collect();
+    let screen = dir.join("screen.tsv");
+    std::fs::write(&screen, rows.join("\n") + "\n").unwrap();
+    run(&["impute", "--model", s(&model), "--input", s(&screen), "--out-dir", s(&imp0)]);
+    run(&["impute", "--model", s(&model), "--input", s(&screen), "--guide-target", "--out-dir", s(&imp)]);
+    let (r0, c0, z0) = matrix(s(&imp0.join("imputed_zscores.tsv")));
+    let (_, _, z1) = matrix(s(&imp.join("imputed_zscores.tsv")));
+    let panel_genes: Vec<String> = std::fs::read_to_string(&panel).unwrap().lines().skip(1).map(|l| l.split('\t').nth(1).unwrap().to_string()).collect();
+    let (mut changed, mut expected) = (0, 0);
+    for (i, name) in r0.iter().enumerate() {
+        let t: usize = name[1..].parse().unwrap();
+        for (j, gname) in c0.iter().enumerate() {
+            let q: usize = gname[1..].parse().unwrap();
+            let is_target = q == t;
+            let is_near = q != t && (pos(q) as i64 - pos(t) as i64).abs() < 2000;
+            if is_target || is_near {
+                expected += 1;
+                // on-target effects in the reference are all -6; neighbours of even targets are -2.5, of odd targets ordinary values
+                if is_target { assert!((z1[i][j] + 6.0).abs() < 1e-3, "target {name}: {}", z1[i][j]); }
+            } else { assert_eq!(z0[i][j], z1[i][j], "entry outside the prior changed"); }
+            if z0[i][j] != z1[i][j] { changed += 1; }
+        }
+    }
+    assert!(expected > 0 && changed > 0 && changed <= expected);
+    let listed = std::fs::read_to_string(imp.join("prior_applied.tsv")).unwrap().lines().count() - 1;
+    assert_eq!(listed, expected, "prior_applied.tsv lists every overwritten entry");
+    assert!(!panel_genes.is_empty());
+    // a model without the prior refuses the option
+    let plain = dir.join("plain.bin");
+    run(&["fit-reference", "--ref", s(&reference), "--panel", s(&panel), "--out", s(&plain)]);
+    let o = Command::new(env!("CARGO_BIN_EXE_perturb-impute")).args(["impute", "--model", s(&plain), "--input", s(&screen), "--guide-target", "--out-dir", s(&imp)]).output().unwrap();
+    assert!(!o.status.success());
+    std::fs::remove_dir_all(&dir).ok();
+}

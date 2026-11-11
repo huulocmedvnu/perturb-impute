@@ -1,0 +1,21 @@
+inner training 6925 perturbations, inner holdout 787, panel 500, genes outside the panel 6594, ridge alpha 1
+
+[1] variance of the held-out half, genes outside the panel (z units of a half)
+  all programs: total variance of the held-out half 1.122; reproducible between halves 0.093 = 8.3% of the total
+  specific (10 programs removed): total variance of the held-out half 1.044; reproducible between halves 0.036 = 3.5% of the total
+
+[2] target gene, neighbours, calibration and shared noise
+  (a) target gene of the knockdown: outside the panel for 511 of 787 perturbations; median measured z -3.8, median ridge prediction 0.00;
+      this single gene holds 2.7% of the reproducible variance (511 of 5189478 gene and perturbation pairs)
+  (b) genes with a TSS 0 to 2 kb from the target: 93 pairs, median z -2.05
+  (b) genes with a TSS 2 to 20 kb from the target: 133 pairs, median z -0.12
+  (b) genes with a TSS 20 to 200 kb from the target: 1694 pairs, median z -0.14
+  (b) genes with a TSS 200 to 1000 kb from the target: 5594 pairs, median z -0.06
+  (f) predictions with |z| in [0, 1): 5124236 pairs, slope of the held-out half on the prediction 0.61
+  (f) predictions with |z| in [1, 2): 57085 pairs, slope of the held-out half on the prediction 1.01
+  (f) predictions with |z| in [2, 4): 7662 pairs, slope of the held-out half on the prediction 1.08
+  (f) predictions with |z| in [4, 8): 471 pairs, slope of the held-out half on the prediction 1.02
+  (f) predictions with |z| in [8, inf): 24 pairs, slope of the held-out half on the prediction 1.01
+  (g) noise of the 500 panel genes in a half: mean variance 1.30 (signal variance 1.20); off-diagonal share of the noise covariance 45.9%; leading noise eigenvalues 108.6 23.2 19.0 (1.0 for independent noise)
+
+resident 1350 MB, 5.5s
