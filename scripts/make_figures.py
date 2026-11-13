@@ -81,7 +81,7 @@ style(fig, 1300, 860); fig.update_layout(legend=dict(orientation="v", yanchor="t
 # ---------------- Figure 4: DE presence, direction and size, out of panel and hybrid readout
 H = N["hybrid"]
 fig = make_subplots(2, 3, specs=[[{}, {}, {}], [{}, {}, None]], vertical_spacing=0.2, horizontal_spacing=0.09,
-                    subplot_titles=["a  DE genes recovered", "b  Opposite sign", "c  Size ranking among DE genes", "d  Effect size calibration", "e  Size ranking, K562 fold 0"])
+                    subplot_titles=["a  DE genes recovered", "b  Opposite sign", "c  Size ranking among DE genes", "d  Effect size calibration", "e  Size ranking, K562 first fold"])
 x = list(range(4))
 bars = [("baseline", "Imputed, genes outside the panel", C[0], -0.3), ("direct_out", "Measured, genes outside the panel", C[4], -0.1),
         ("hybrid_all", "Hybrid, panel measured and other genes imputed", C[2], 0.1), ("direct_all", "Measured, all genes", C[1], 0.3)]
