@@ -10,6 +10,9 @@
 //!                                [--guide-target [--target-map FILE] [--prior-scale 1.0]]
 //!   perturb-impute validate      --model model.bin --input-z PREFIX --out per_gene.tsv
 //!   perturb-impute project       --ref REF --input matrix.tsv [--programs 160] --out projected.tsv
+//!                                [--shrink-by-cells [--cells FILE]]
+//! select, fit-reference and project accept --min-cells N [--ref-cells FILE]: the reference is restricted to the
+//! perturbations with at least N cells, which builds an internal reference from the well-sampled perturbations of a screen.
 //!
 //! REF is either a z-score prefix (PREFIX.meta.tsv, PREFIX.genes.tsv, PREFIX.z.f32 with layers
 //! all cells / half 0 / half 1) or a TSV matrix (perturbations x genes, first column = name).
@@ -65,6 +68,12 @@ impl Prof {
         }
         Ok(Prof { perts, genes, store: Store::Mem(vec![v]) })
     }
+    /// the perturbations `keep` alone, copied into memory
+    fn subset(&self, keep: &[usize]) -> Prof {
+        let g = self.genes.len();
+        let layers = (0..self.n_layers()).map(|l| { let x = self.layer(l); keep.iter().flat_map(|&p| x[p * g..(p + 1) * g].to_vec()).collect() }).collect();
+        Prof { perts: keep.iter().map(|&p| self.perts[p].clone()).collect(), genes: self.genes.clone(), store: Store::Mem(layers) }
+    }
     fn n_layers(&self) -> usize { match &self.store { Store::Mem(v) => v.len(), Store::Map(_, n) => *n } }
     fn layer(&self, l: usize) -> &[f32] {
         match &self.store { Store::Mem(v) => &v[l], Store::Map(m, n) => { let all: &[f32] = bytemuck::cast_slice(m); let len = all.len() / n; &all[l * len..(l + 1) * len] } }
@@ -84,6 +93,36 @@ fn read_map(path: &str) -> Result<HashMap<String, String>> {
         if f.len() >= 2 { m.insert(f[0].to_string(), f[1].to_string()); }
     }
     Ok(m)
+}
+
+/// Cells of each perturbation: the second column of PREFIX.meta.tsv for a z-score prefix, or of `file` (perturbation, cells).
+fn cell_counts(path: &str, file: Option<String>, perts: &[String]) -> Result<Vec<f64>> {
+    let meta = format!("{path}.meta.tsv");
+    let (src, skip) = match file { Some(f) => (f, 0), None if std::path::Path::new(&meta).exists() => (meta, 1), None => bail!("no cell numbers for {path}: give a file with the columns perturbation and cells") };
+    let m: HashMap<String, f64> = std::fs::read_to_string(&src).with_context(|| src.clone())?.lines().skip(skip).filter_map(|l| { let f: Vec<&str> = l.split('\t').collect(); f.get(1).and_then(|v| v.parse::<f64>().ok()).map(|v| (f[0].to_string(), v)) }).collect();
+    perts.iter().map(|p| m.get(p).copied().ok_or_else(|| anyhow!("no cell number for perturbation {p} in {src}"))).collect()
+}
+/// Reference profiles, restricted to the perturbations with at least --min-cells cells when this argument is given
+/// (an internal reference built from the well-sampled perturbations of a screen).
+fn load_ref(a: &Args, cmd: &str) -> Result<Prof> {
+    let path = a.req("--ref")?;
+    let p = Prof::load(&path)?;
+    let Some(min) = a.get("--min-cells") else { return Ok(p) };
+    let min: f64 = min.parse()?;
+    let n = cell_counts(&path, a.get("--ref-cells"), &p.perts)?;
+    let keep: Vec<usize> = (0..p.perts.len()).filter(|&i| n[i] >= min).collect();
+    if keep.len() < 50 { bail!("--min-cells {min} leaves {} reference perturbations (at least 50 are needed)", keep.len()) }
+    eprintln!("{cmd}: {} of {} reference perturbations have at least {min} cells", keep.len(), p.perts.len());
+    Ok(p.subset(&keep))
+}
+/// Weight of the measured profile of each perturbation when it is shrunk towards its projection on k reference
+/// programs. Outside the programs a z-score profile has unit noise variance, and the mean square there minus one
+/// estimates the signal variance, taken proportional to the number of cells with one constant c for the screen.
+/// The weight of a perturbation with n cells is c n / (c n + 1). Returns (c, weights).
+fn shrink_weights(x: &[f64], proj: &[f64], g: usize, k: usize, cells: &[f64]) -> (f64, Vec<f64>) {
+    let excess: f64 = x.par_chunks(g).zip(proj.par_chunks(g)).map(|(a, b)| a.iter().zip(b).map(|(u, v)| (u - v).powi(2)).sum::<f64>() / (g - k) as f64 - 1.0).sum();
+    let c = (excess / cells.iter().sum::<f64>()).max(0.0);
+    (c, cells.iter().map(|&n| c * n / (c * n + 1.0)).collect())
 }
 
 fn pearson(x: &[f64], y: &[f64]) -> f64 {
@@ -139,7 +178,7 @@ fn greedy(c: &[f64], n: usize, g: usize, k: usize, w: &[f64]) -> Vec<(usize, f64
 
 fn cmd_select(a: &Args) -> Result<()> {
     let t0 = Instant::now();
-    let p = Prof::load(&a.req("--ref")?)?;
+    let p = load_ref(a, "select")?;
     let k: usize = a.get("--panel-size").map(|v| v.parse()).transpose()?.unwrap_or(500);
     let mode = a.get("--mode").unwrap_or("standard".into());
     let g = p.genes.len();
@@ -350,7 +389,7 @@ impl Prior {
 
 fn cmd_fit(a: &Args) -> Result<()> {
     let t0 = Instant::now();
-    let p = Prof::load(&a.req("--ref")?)?;
+    let p = load_ref(a, "fit-reference")?;
     let g = p.genes.len();
     let gi: HashMap<&str, usize> = p.genes.iter().enumerate().map(|(i, s)| (s.as_str(), i)).collect();
     let ptxt = std::fs::read_to_string(a.req("--panel")?)?;
@@ -555,7 +594,7 @@ fn project(reference: &[f64], n_ref: usize, g: usize, x: &[f64], n: usize, k: us
 /// Genes are matched by name; reference genes absent from the input enter as zero.
 fn cmd_project(a: &Args) -> Result<()> {
     let t0 = Instant::now();
-    let r = Prof::load(&a.req("--ref")?)?;
+    let r = load_ref(a, "project")?;
     let x = Prof::load(&a.req("--input")?)?;
     let k: usize = a.get("--programs").map(|v| v.parse()).transpose()?.unwrap_or(160);
     let (n, g) = (r.perts.len(), r.genes.len());
@@ -572,8 +611,20 @@ fn cmd_project(a: &Args) -> Result<()> {
         }
     }
     if matched < g / 2 { bail!("only {matched} of {g} reference genes found in the input") }
-    let p = project(&y, n, g, &m, nx, k)?;
-    let mut w = BufWriter::new(std::fs::File::create(a.req("--out")?)?);
+    let mut p = project(&y, n, g, &m, nx, k)?;
+    let out = a.req("--out")?;
+    // optional: each measured profile shrunk towards its projection with a weight set by its number of cells
+    if a.0.iter().any(|v| v == "--shrink-by-cells") {
+        let cells = cell_counts(&a.req("--input")?, a.get("--cells"), &x.perts)?;
+        let (c, wt) = shrink_weights(&m, &p, g, k, &cells);
+        p.par_chunks_mut(g).enumerate().for_each(|(i, r)| for (v, z) in r.iter_mut().zip(&m[i * g..(i + 1) * g]) { *v += wt[i] * (z - *v); });
+        let mut w = BufWriter::new(std::fs::File::create(format!("{out}.weights.tsv"))?);
+        writeln!(w, "perturbation\tcells\tweight_of_measured_profile")?;
+        for i in 0..nx { writeln!(w, "{}\t{}\t{:.4}", x.perts[i], cells[i], wt[i])?; }
+        let mut s = wt.clone(); s.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        eprintln!("project: measured profiles shrunk towards the projection; signal variance per cell outside the programs {c:.5}, weight of the measured profile {:.2} to {:.2} (median {:.2})", s[0], s[nx - 1], s[nx / 2]);
+    }
+    let mut w = BufWriter::new(std::fs::File::create(&out)?);
     writeln!(w, "perturbation\t{}", r.genes.join("\t"))?;
     for i in 0..nx { writeln!(w, "{}\t{}", x.perts[i], p[i * g..(i + 1) * g].iter().map(|v| format!("{:.5}", v)).collect::<Vec<_>>().join("\t"))?; }
     eprintln!("project: {nx} profiles, {matched} of {g} reference genes matched, {k} programs, {:.1}s", t0.elapsed().as_secs_f64());
@@ -594,6 +645,13 @@ const HELP: &str = "perturb-impute: gene panels and transcriptome-wide imputatio
   validate      --model model.bin --input-z PREFIX --out per_gene_r.tsv [--layer 1 --truth-layer 2]
   project       --ref REF --input matrix.tsv --out projected.tsv [--programs 160]
                 (whole-transcriptome profiles projected on the leading reference programs)
+                [--shrink-by-cells [--cells pert_cells.tsv]]
+                (each measured profile is shrunk towards its projection with a weight that grows with its
+                 number of cells; the weights are written to projected.tsv.weights.tsv)
+
+Internal reference: select, fit-reference and project accept --min-cells N [--ref-cells pert_cells.tsv] and then use
+only the reference perturbations with at least N cells, for instance the well-sampled perturbations of the screen
+itself. Cell numbers are read from PREFIX.meta.tsv (second column) or from the file given.
 
 REF: z-score prefix (PREFIX.meta.tsv, PREFIX.genes.tsv, PREFIX.z.f32; layers all cells, half 0, half 1)
      or a TSV/CSV matrix with perturbations in rows, genes in columns and names in the first column.";
@@ -637,6 +695,18 @@ mod tests {
         let x: Vec<f64> = inside.iter().chain(outside.iter()).copied().collect();
         let p = project(&y, 6, 4, &x, 2, 2).unwrap();
         for j in 0..4 { assert!((p[j] - inside[j]).abs() < 1e-8, "inside {j}: {}", p[j]); assert!(p[4 + j].abs() < 1e-8, "outside {j}: {}", p[4 + j]); }
+    }
+    /// shrinkage weights: a profile inside the programs keeps its projection, and the weight grows with the number of cells
+    #[test]
+    fn shrinkage_weight_grows_with_cells() {
+        let g = 400;
+        // two measured profiles with the same excess mean square outside one program (first gene), 10 and 90 cells
+        let x: Vec<f64> = (0..2 * g).map(|i| if i % g == 0 { 5.0 } else if i % 2 == 0 { 2.0 } else { -2.0 }).collect();
+        let proj: Vec<f64> = (0..2 * g).map(|i| if i % g == 0 { 5.0 } else { 0.0 }).collect();
+        let (c, w) = shrink_weights(&x, &proj, g, 1, &[10.0, 90.0]);
+        // mean square outside the program 4, excess 3 for each profile: c = 6 / 100
+        assert!((c - 0.06).abs() < 1e-12);
+        assert!((w[0] - 0.6 / 1.6).abs() < 1e-12 && (w[1] - 5.4 / 6.4).abs() < 1e-12 && w[1] > w[0]);
     }
     /// weights solved on a subset equal the ridge solution written out directly
     #[test]

@@ -1,0 +1,81 @@
+screen	fold	input_cells	reference	n_reference	penalty	programs	signal_variance_per_cell
+K562	0	all	external	7712	1.0	160	0.00028
+K562	0	all	internal	3974	1.0	100	0.00043
+K562	1	all	external	7707	1.0	160	0.0002
+K562	1	all	internal	3847	1.0	100	0.00034
+K562	2	all	external	7726	1.0	160	0.00016
+K562	2	all	internal	3904	1.0	100	0.00029
+K562	3	all	external	7693	1.0	160	0.00027
+K562	3	all	internal	3872	1.0	100	0.00052
+K562	4	all	external	7759	1.0	160	0.00031
+K562	4	all	internal	3868	1.0	100	0.00046
+RPE1	0	all	external	9866	1.0	160	0.01372
+RPE1	0	all	internal	854	1.0	160	0.00614
+RPE1	1	all	external	9866	1.0	160	0.00889
+RPE1	1	all	internal	958	1.0	160	0.00297
+RPE1	2	all	external	9866	1.0	160	0.01338
+RPE1	2	all	internal	970	1.0	160	0.00775
+RPE1	3	all	external	9866	1.0	160	0.00841
+RPE1	3	all	internal	950	1.0	160	0.00289
+RPE1	4	all	external	9866	1.0	160	0.00797
+RPE1	4	all	internal	977	0.1	160	0.00321
+HepG2	0	all	external	9866	1.0	160	0.01678
+HepG2	0	all	internal	929	1.0	100	0.00507
+HepG2	1	all	external	9866	1.0	160	0.00776
+HepG2	1	all	internal	975	1.0	100	0.00319
+HepG2	2	all	external	9866	1.0	160	0.00799
+HepG2	2	all	internal	935	1.0	100	0.00323
+HepG2	3	all	external	9866	1.0	160	0.01154
+HepG2	3	all	internal	936	1.0	100	0.00418
+HepG2	4	all	external	9866	1.0	160	0.0088
+HepG2	4	all	internal	954	1.0	100	0.00268
+Jurkat	0	all	external	9866	1.0	160	0.00647
+Jurkat	0	all	internal	963	1.0	100	0.00356
+Jurkat	1	all	external	9866	1.0	160	0.00267
+Jurkat	1	all	internal	952	1.0	160	0.00082
+Jurkat	2	all	external	9866	1.0	160	0.00419
+Jurkat	2	all	internal	918	1.0	100	0.00244
+Jurkat	3	all	external	9866	1.0	160	0.00414
+Jurkat	3	all	internal	933	1.0	100	0.00279
+Jurkat	4	all	external	9866	1.0	160	0.00298
+Jurkat	4	all	internal	943	1.0	100	0.00145
+K562 essential	0	15	external	7712	1.0	160	0.0
+K562 essential	0	15	internal	712	1.0	100	0.0
+K562 essential	0	30	external	7712	1.0	160	0.00089
+K562 essential	0	30	internal	712	1.0	100	0.00143
+K562 essential	0	50	external	7712	1.0	160	0.00155
+K562 essential	0	50	internal	712	1.0	100	0.00188
+K562 essential	0	all	external	7712	1.0	160	0.00212
+K562 essential	0	all	internal	712	1.0	100	0.00229
+K562 essential	1	15	external	7707	1.0	160	0.0
+K562 essential	1	15	internal	777	1.0	100	0.0
+K562 essential	1	30	external	7707	1.0	160	0.00081
+K562 essential	1	30	internal	777	1.0	100	0.0015
+K562 essential	1	50	external	7707	1.0	160	0.00142
+K562 essential	1	50	internal	777	1.0	100	0.00185
+K562 essential	1	all	external	7707	1.0	160	0.00216
+K562 essential	1	all	internal	777	1.0	100	0.00235
+K562 essential	2	15	external	7726	1.0	160	0.0
+K562 essential	2	15	internal	807	1.0	100	0.0
+K562 essential	2	30	external	7726	1.0	160	0.00028
+K562 essential	2	30	internal	807	1.0	100	0.00085
+K562 essential	2	50	external	7726	1.0	160	0.00111
+K562 essential	2	50	internal	807	1.0	100	0.0015
+K562 essential	2	all	external	7726	1.0	160	0.00191
+K562 essential	2	all	internal	807	1.0	100	0.00219
+K562 essential	3	15	external	7693	1.0	160	0.0
+K562 essential	3	15	internal	823	1.0	100	0.0
+K562 essential	3	30	external	7693	1.0	160	0.0006
+K562 essential	3	30	internal	823	1.0	100	0.00111
+K562 essential	3	50	external	7693	1.0	160	0.00126
+K562 essential	3	50	internal	823	1.0	100	0.00158
+K562 essential	3	all	external	7693	1.0	160	0.00156
+K562 essential	3	all	internal	823	1.0	100	0.00172
+K562 essential	4	15	external	7759	1.0	160	0.0
+K562 essential	4	15	internal	826	1.0	100	0.00014
+K562 essential	4	30	external	7759	1.0	160	0.00144
+K562 essential	4	30	internal	826	1.0	100	0.00214
+K562 essential	4	50	external	7759	1.0	160	0.00212
+K562 essential	4	50	internal	826	1.0	100	0.0026
+K562 essential	4	all	external	7759	1.0	160	0.00273
+K562 essential	4	all	internal	826	1.0	100	0.003

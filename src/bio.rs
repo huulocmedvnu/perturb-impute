@@ -12,13 +12,43 @@ use crate::causal::*;
 use crate::explore::*;
 use crate::*;
 
-fn deflate_rows(m: &[f32], w: usize, b: &[f32]) -> Vec<f32> { let (n, k) = (m.len() / w, b.len() / w); let mut o = m.to_vec(); let back = sgemm(false, true, n, w, k, &sgemm(false, false, n, k, w, m, b), b); o.par_iter_mut().zip(&back).for_each(|(x, y)| *x -= y); o }
+pub(crate) fn deflate_rows(m: &[f32], w: usize, b: &[f32]) -> Vec<f32> { let (n, k) = (m.len() / w, b.len() / w); let mut o = m.to_vec(); let back = sgemm(false, true, n, w, k, &sgemm(false, false, n, k, w, m, b), b); o.par_iter_mut().zip(&back).for_each(|(x, y)| *x -= y); o }
 /// correlation matrix between the rows of m (n x w)
-fn row_corr(m: &[f32], w: usize) -> Vec<f32> {
+pub(crate) fn row_corr(m: &[f32], w: usize) -> Vec<f32> {
     let n = m.len() / w;
     let mut c = m.to_vec();
     c.par_chunks_mut(w).for_each(|r| { let mu = r.iter().sum::<f32>() / w as f32; for v in r.iter_mut() { *v -= mu; } let nr = r.iter().map(|v| v * v).sum::<f32>().sqrt().max(1e-12); for v in r.iter_mut() { *v /= nr; } });
     sgemm(false, true, n, n, w, &c, &c)
+}
+
+pub(crate) fn read_umi(f: Option<String>) -> Result<HashMap<String, f64>> {
+    Ok(match f { Some(uf) => std::fs::read_to_string(uf)?.lines().filter_map(|l| { let x: Vec<&str> = l.split('\t').collect(); x.get(1).and_then(|v| v.parse::<f64>().ok()).map(|v| (x[0].to_string(), v)) }).collect(), None => HashMap::new() })
+}
+/// Guide-target prior: entries (row of `names`, gene, value) for the target gene of each knockdown (median z of the
+/// reference knockdowns in its expression decile, held-out half) and for genes with a TSS within 2 kb (one median),
+/// when these genes are outside the panel `s`. Also returns the two overall medians.
+pub(crate) fn guide_prior(d: &Data, refs: &[usize], s: &[usize], u: &[usize], names: &[&str], tss: &HashMap<String, (String, f64)>, umi: &HashMap<String, f64>) -> (Vec<(usize, usize, f32)>, f32, f32) {
+    let g = d.genes.len();
+    let gix: HashMap<&str, usize> = d.genes.iter().enumerate().map(|(i, x)| (x.as_str(), i)).collect();
+    let inp: HashSet<usize> = s.iter().copied().collect();
+    let own = |name: &str| -> Option<usize> { gix.get(name).copied().filter(|j| !inp.contains(j)) };
+    let near = |name: &str| -> Vec<usize> { match tss.get(name) { Some((chr, pos)) => u.iter().copied().filter(|&j| d.genes[j] != name && tss.get(&d.genes[j]).map(|(c2, p2)| c2 == chr && (p2 - pos).abs() < 2e3).unwrap_or(false)).collect(), None => vec![] } };
+    let r2 = d.rows(2, refs);
+    let (mut zo, mut zn, mut ze) = (vec![], vec![], vec![]);
+    for (b, &p) in refs.iter().enumerate() {
+        if let Some(j) = own(&d.perts[p]) { zo.push(r2[b * g + j] as f64); if let Some(&e) = umi.get(&d.perts[p]) { ze.push((e, r2[b * g + j] as f64)); } }
+        for j in near(&d.perts[p]) { zn.push(r2[b * g + j] as f64); }
+    }
+    ze.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap());
+    let (mut cuts, mut bins) = (vec![], vec![]);
+    if ze.len() >= 100 { for ch in ze.chunks(ze.len().div_ceil(10)) { cuts.push(ch.last().unwrap().0); bins.push(median(ch.iter().map(|x| x.1).collect()) as f32); } }
+    let (own_med, near_med) = (median(zo) as f32, if zn.is_empty() { 0.0 } else { median(zn) as f32 });
+    let mut set = vec![];
+    for (b, name) in names.iter().enumerate() {
+        if let Some(j) = own(name) { set.push((b, j, match umi.get(*name) { Some(&e) if !cuts.is_empty() => bins[cuts.iter().position(|&cc| e <= cc).unwrap_or(cuts.len() - 1)], _ => own_med })); }
+        for j in near(name) { set.push((b, j, near_med)); }
+    }
+    (set, own_med, near_med)
 }
 
 pub fn run(a: &[String]) -> Result<()> {
@@ -51,31 +81,14 @@ pub fn run(a: &[String]) -> Result<()> {
     // hybrid profile with the guide-target prior: the target gene of each knockdown (by expression decile) and genes with a
     // TSS within 2 kb take the median z-score of the reference knockdowns (held-out half), when they are outside the panel
     let hybp = {
-        let gix: HashMap<&str, usize> = d.genes.iter().enumerate().map(|(i, x)| (x.as_str(), i)).collect();
-        let inp: HashSet<usize> = s.iter().copied().collect();
         let mut tss: HashMap<String, (String, f64)> = HashMap::new();
         if let Some(tf) = arg(a, "--tss") { for (name, v) in read_tss(&tf)? { tss.entry(name).or_insert(v); } }
-        let umi: HashMap<String, f64> = match arg(a, "--umi") { Some(uf) => std::fs::read_to_string(uf)?.lines().filter_map(|l| { let x: Vec<&str> = l.split('\t').collect(); x.get(1).and_then(|v| v.parse::<f64>().ok()).map(|v| (x[0].to_string(), v)) }).collect(), None => HashMap::new() };
-        let own = |name: &str| -> Option<usize> { gix.get(name).copied().filter(|j| !inp.contains(j)) };
-        let near = |name: &str| -> Vec<usize> { match tss.get(name) { Some((chr, pos)) => u.iter().copied().filter(|&j| d.genes[j] != name && tss.get(&d.genes[j]).map(|(c2, p2)| c2 == chr && (p2 - pos).abs() < 2e3).unwrap_or(false)).collect(), None => vec![] } };
-        let r2 = d.rows(2, &c.refs);
-        let (mut zo, mut zn, mut ze) = (vec![], vec![], vec![]);
-        for (b, &p) in c.refs.iter().enumerate() {
-            if let Some(j) = own(&d.perts[p]) { zo.push(r2[b * g + j] as f64); if let Some(&e) = umi.get(&d.perts[p]) { ze.push((e, r2[b * g + j] as f64)); } }
-            for j in near(&d.perts[p]) { zn.push(r2[b * g + j] as f64); }
-        }
-        ze.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap());
-        let (mut cuts, mut bins) = (vec![], vec![]);
-        if ze.len() >= 100 { for ch in ze.chunks(ze.len().div_ceil(10)) { cuts.push(ch.last().unwrap().0); bins.push(median(ch.iter().map(|x| x.1).collect()) as f32); } }
-        let (own_med, near_med) = (median(zo) as f32, if zn.is_empty() { 0.0 } else { median(zn) as f32 });
+        let umi = read_umi(arg(a, "--umi"))?;
+        let names: Vec<&str> = tests.iter().map(|&p| dt.perts[p].as_str()).collect();
+        let (set, own_med, near_med) = guide_prior(d, &c.refs, s, u, &names, &tss, &umi);
         let mut h = hyb.clone();
-        let mut nset = 0usize;
-        for (b, &p) in tests.iter().enumerate() {
-            let name = dt.perts[p].as_str();
-            if let Some(j) = own(name) { h[b * g + j] = match umi.get(name) { Some(&e) if !cuts.is_empty() => bins[cuts.iter().position(|&cc| e <= cc).unwrap_or(cuts.len() - 1)], _ => own_med }; nset += 1; }
-            for j in near(name) { h[b * g + j] = near_med; nset += 1; }
-        }
-        println!("guide-target prior: {nset} entries set (target median {own_med:.2}, neighbours {near_med:.2})");
+        for &(b, j, v) in &set { h[b * g + j] = v; }
+        println!("guide-target prior: {} entries set (target median {own_med:.2}, neighbours {near_med:.2})", set.len());
         h
     };
     let readouts: Vec<(&str, &[f32], usize)> = vec![("whole transcriptome, all cells", &z0, g), ("whole transcriptome, half", &z1, g), ("projected on 160 programs", &proj, g), ("panel genes alone", &xp, k), ("hybrid (panel + imputed)", &hyb, g), ("hybrid + guide-target prior", &hybp, g)];

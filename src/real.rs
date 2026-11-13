@@ -267,7 +267,7 @@ const MED_CHI2_1: f64 = 0.454936423119572;
 /// z of half 0 restricted to its first m cells (all if None); control mean and per-cell null
 /// variance from all cells, as in `zhalves`. `panel_norm`: cells normalised by the UMIs of the
 /// mapped genes (targeted readout) instead of the whole library.
-fn zsub(c: &Cache, allq: &[usize], map: &[i32], ncol: usize, panel_norm: bool, m: Option<usize>, rep: usize) -> Vec<f64> {
+pub(crate) fn zsub(c: &Cache, allq: &[usize], map: &[i32], ncol: usize, panel_norm: bool, m: Option<usize>, rep: usize) -> Vec<f64> {
     let rate: Vec<f64> = map.iter().map(|&k| if panel_norm { if k >= 0 { 1.0 } else { 0.0 } } else { 1.0 }).collect();
     let sums = pseudobulk(c, allq, map, ncol, &rate, !panel_norm, 1.0, 0);
     let n = |s: usize| c.groups[allq[s]].2;

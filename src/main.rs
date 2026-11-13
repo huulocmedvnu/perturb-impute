@@ -15,6 +15,7 @@ mod causal;
 mod explore;
 mod explore_test;
 mod bio;
+mod rescue;
 
 use anyhow::{anyhow, bail, Result};
 use rayon::prelude::*;
@@ -573,6 +574,8 @@ fn main() -> Result<()> {
     if cmd == "causal" { return causal::run(&a); }
     if cmd == "explore" { return explore::run(&a); }
     if cmd == "bio" { return bio::run(&a); }
+    if cmd == "rescue" { return rescue::run(&a); }
+    if cmd == "thin" { return rescue::thin(&a); }
     if cmd == "mtx2cache" { return real::mtx2cache(&a); }
     if cmd == "realsum" { return real::summary(&a); }
     if cmd == "cellsum" { return real::cellsum(&a); }

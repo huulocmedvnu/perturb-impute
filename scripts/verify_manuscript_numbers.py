@@ -206,6 +206,55 @@ in_range(S, "DE count rank correlation, whole transcriptome, other cell lines", 
 dmax = max(abs(float(BIm[(c, an, "all", HY, me)]) - float(BIm[(c, an, "all", "hybrid (panel + imputed)", me)])) for (c, an, fr, ro, me) in BIm.index if ro == HY and fr == "all")
 check(S, "largest difference between hybrid with and without the prior", "0.011", dmax, "summary")
 
+# ---------------- perturbations with few cells and internal references (Table S10)
+S = "Few cells"; RS = pd.read_csv(os.path.join(SD, "rescue", "summary.tsv"), sep="\t", dtype={"input_cells": str})
+DIR, HYE, PRE, PRI, SHI = "direct", "hybrid, external", "projected, external", "projected, internal", "shrunk, internal"
+def rs(screen, level, stratum, ro, col): return float(RS[(RS.screen == screen) & (RS.input_cells == level) & (RS.stratum == stratum) & (RS.readout == ro)][col].iloc[0])
+def low(c):
+    """per-perturbation table of one screen, knockdowns with 50 or fewer input cells"""
+    t = tab(f"rescue.{c}.tsv"); return t[(t.input_cells.astype(str) == "all") & (t.n_in <= 50)]
+def pooled(t, ro, col): x = t[t.readout == ro]; return x[col].sum() / x.n_de.sum()
+E15 = tab("rescue.k562ess.tsv"); E15["input_cells"] = E15.input_cells.astype(str); e15 = E15[E15.input_cells == "15"]
+check(S, "knockdowns of the essential-gene screen tested", "1,055", e15[e15.readout == DIR].shape[0])
+for ro, e_tp, e_op in [(DIR, "36%", "14%"), (HYE, "53%", "6%"), (PRE, "56%", "3%"), (PRI, "58%", "3%")]:
+    check(S, f"15 cells, DE genes found, {ro}", e_tp, pooled(e15, ro, "tp")); check(S, f"15 cells, opposite-sign calls, {ro}", e_op, pooled(e15, ro, "disc"))
+for ro, e_pw, e_cx in [(DIR, "0.570", "0.848"), (PRE, "0.726", "0.869"), (PRI, "0.728", "0.891")]:
+    check(S, f"15 cells, pathway r, {ro}", e_pw, rs("K562 essential", "15", "all", ro, "pathway_r"), "summary"); check(S, f"15 cells, complex AUC, {ro}", e_cx, rs("K562 essential", "15", "all", ro, "complex_auroc"), "summary")
+k50 = low("k562")
+check(S, "K562 knockdowns with 50 or fewer input cells", "1,678", k50[k50.readout == DIR].shape[0])
+check(S, "K562, DE genes found, direct", "24%", pooled(k50, DIR, "tp")); check(S, "K562, DE genes found, projected on the atlas", "30%", pooled(k50, PRE, "tp"))
+check(S, "K562, opposite-sign calls, direct", "22%", pooled(k50, DIR, "disc")); check(S, "K562, opposite-sign calls, projected on the atlas", "10%", pooled(k50, PRE, "disc"))
+o50 = [low(c) for c in ("rpe1", "hepg2", "jurkat")]
+rows.append(("PASS" if (min(len(t[t.readout == DIR]) for t in o50), max(len(t[t.readout == DIR]) for t in o50)) == (1229, 1796) else "FAIL", S, "knockdowns with 50 or fewer input cells, other screens", "1,229 to 1,796", ", ".join(str(len(t[t.readout == DIR])) for t in o50), "tables"))
+in_range(S, "DE genes found, projected on the atlas, other screens", "31%", "45%", [pooled(t, PRE, "tp") for t in o50]); in_range(S, "DE genes found, direct, other screens", "33%", "53%", [pooled(t, DIR, "tp") for t in o50])
+in_range(S, "DE genes found, projected on the internal reference, other screens", "36%", "56%", [pooled(t, PRI, "tp") for t in o50])
+in_range(S, "opposite-sign calls, direct, other screens", "5.2%", "14.5%", [pooled(t, DIR, "disc") for t in o50]); in_range(S, "opposite-sign calls, internal reference, other screens", "1.6%", "4.9%", [pooled(t, PRI, "disc") for t in o50])
+def paired(t, ro):
+    w = t.pivot(index=["fold", "pert"], columns="readout", values="rp_own"); d = (w[ro] - w[DIR]).dropna(); return (d > 0).mean(), wilcoxon(d).pvalue
+in_range(S, "knockdowns with a higher specific correlation, internal projection, other screens", "75%", "82%", [paired(t, PRI)[0] for t in o50])
+check(S, "largest P value, internal projection against direct", "P < 0.001", max(paired(t, PRI)[1] for t in o50))
+in_range(S, "knockdowns with a higher specific correlation, shrunk profile, 15 cells to all cells", "86%", "89%", [paired(E15[E15.input_cells == l], SHI)[0] for l in ("15", "30", "50", "all")])
+eall = E15[E15.input_cells == "all"]
+for ro, e in [(SHI, "0.200"), (DIR, "0.116"), (PRI, "0.189")]: check(S, f"all cells, median specific correlation, {ro}", e, eall[eall.readout == ro].rp_own.median())
+RF = pd.read_csv(os.path.join(SD, "rescue", "reference.tsv"), sep="\t"); RI = RF[RF.reference == "internal"]
+rng = lambda sel: (int(sel.n_reference.min()), int(sel.n_reference.max()))
+for nm, sel, e in [("K562", RI[RI.screen == "K562"], (3847, 3974)), ("other screens", RI[RI.screen.isin(["RPE1", "HepG2", "Jurkat"])], (854, 977)), ("essential-gene screen", RI[RI.screen == "K562 essential"], (712, 826))]:
+    rows.append(("PASS" if rng(sel) == e else "FAIL", S, f"internal reference knockdowns, {nm}", f"{e[0]:,} to {e[1]:,}", f"{rng(sel)[0]}, {rng(sel)[1]}", "summary"))
+rows.append(("PASS" if set(RI.programs) == {100, 160} else "FAIL", S, "programs of the internal reference", "100 or 160", ", ".join(map(str, sorted(set(RI.programs)))), "summary"))
+# Table S10 of the supplement agrees with the summary, row by row
+TS = os.path.join(SD, "rescue", "table_s10.md")
+if os.path.exists(TS):
+    n_ok = n_all = 0
+    for l in open(TS):
+        f = [x.strip() for x in l.strip().strip("|").split("|")]
+        if len(f) != 9 or not f[1].isdigit(): continue
+        lev, strat, scr = (f[0].lower(), "all", "K562 essential") if f[0] in ("15", "30", "50", "All") else ("all", "<=50", f[0])
+        ro = {"Direct measurement": "direct", "Hybrid profile": "hybrid", "Hybrid profile with guide-target prior": "hybrid + prior", "Projected whole transcriptome": "projected", "Shrunk whole transcriptome": "shrunk"}[f[3]]
+        ro = ro if ro == "direct" else ro + (", external" if f[2] == "Atlas" else ", internal")
+        vals = [rs(scr, lev, strat, ro, c) for c in ("median_rp_own", "de_recall", "opposite", "pathway_r", "complex_auroc")]
+        n_all += 1; n_ok += all(abs(float(a) - b) <= 5.1e-4 for a, b in zip(f[4:], vals))
+    rows.append(("PASS" if n_ok == n_all == 72 else "FAIL", S, "rows of Table S10 equal to the summary", "72", str(n_ok), "summary"))
+
 # ---------------- values that need the full atlas
 S = "Reference atlas"
 check(S, "programs above the noise level, K562", "172", N["mp"]["n_programs"], "json"); check(S, "genes analysed", "7,094", N["noise"]["n_genes_universe"], "json"); check(S, "knockdowns", "9,866", N["noise"]["n_perts_gwps"], "json")

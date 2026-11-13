@@ -32,7 +32,7 @@ No atlas has to be downloaded for these steps. Requirements are listed in `envir
 | `preprocess/`, `orion-ingest/` | pseudobulk z-scores from cell caches, and streaming ingest of the X-Atlas/Orion Parquet files |
 | `panels/` | released panels and per-gene tables (Additional files 3 to 5 of the manuscript) |
 | `models/` | pre-trained models and the inputs needed to rebuild them (`models/README.md`) |
-| `source_data/` | per-perturbation tables (`tables/`), summaries (`real/`, `sim/`, `xatlas/`, `vcm/`, `alt/`, `bio/`, `example/`) and `numbers.json` behind the figures and tables |
+| `source_data/` | per-perturbation tables (`tables/`), summaries (`real/`, `sim/`, `xatlas/`, `vcm/`, `alt/`, `bio/`, `rescue/`, `example/`) and `numbers.json` behind the figures and tables |
 | `scripts/` | `verify_manuscript_numbers.py`, `make_figures.py`, `make_flowchart.py`, `make_source_data.py`, `ms_numbers.py`, and the drivers of the full pipeline in `scripts/pipeline/` and `scripts/baselines/` |
 | `tests/` | `cli.rs` (end-to-end test), `data/` (toy data, 0.7 MB), `smoke.sh`, and `validation/` (comparisons of the Rust code with independent numpy implementations, which need the full outputs) |
 | `environment/` | pinned Python packages and notes on the toolchain |
@@ -85,6 +85,18 @@ Missing panel genes are allowed: the weights are solved again on the genes prese
 perturb-impute project --ref reference.tsv --input my_screen_all_genes.tsv --programs 160 --out projected.tsv
 ```
 
+   Perturbations with few cells. With `--shrink-by-cells`, each measured profile is shrunk towards its projection with a weight `c n / (c n + 1)` for a perturbation with `n` cells, where `c` is estimated from the input. Cell numbers come from `--cells` (perturbation, cells) or from `PREFIX.meta.tsv` of a z-score prefix, and the weights are written next to the output.
+
+   Internal reference. A whole-transcriptome screen without an atlas of its cell type can use its own well-sampled perturbations as reference. `select`, `fit-reference` and `project` accept `--min-cells N` (with `--ref-cells` for a matrix reference) and then use only the reference perturbations with at least `N` cells. Keep the perturbations to be projected, and their complex partners, out of the reference.
+
+```sh
+# programs of the perturbations of the screen with 150 cells or more, applied to the perturbations with few cells
+perturb-impute project --ref my_screen_well_sampled.tsv --min-cells 150 --ref-cells cells.tsv \
+  --input my_screen_few_cells.tsv --shrink-by-cells --cells cells.tsv --out shrunk.tsv
+```
+
+   In the manuscript, the reference held the perturbations with at least the median number of cells of the screen. Among knockdowns with 50 or fewer input cells in RPE1, HepG2 and Jurkat cells, projection on this internal reference found 36% to 56% of DE genes, compared with 33% to 53% for direct measurement, with 1.6% to 4.9% opposite-sign calls compared with 5.2% to 14.5% (Additional file 1: Table S10).
+
 5. Use the guide annotation (optional). The released K562 models hold the guide-target prior. With `--guide-target`, the imputed value of the target gene of each knockdown is replaced by the median z-score of that gene among reference knockdowns of the same expression decile, and the values of genes with a TSS within 2 kb by the median of such neighbours. Every other value is the ridge imputation. Row names of the input are read as target gene symbols, or `--target-map` gives them.
 
 ```sh
@@ -131,6 +143,7 @@ All paths are relative to the repository root. "pipeline" means the `panelimp` b
 | Table S7 | `vcm/vcmsum.txt` | pipeline `vcm`, `vcmsum` | Transferred profiles |
 | Table S8 | `real/real.summary.tsv`, `real/cells.summary.tsv` | pipeline `realsum`, `cellsum` | Enriched library |
 | Table S9 | `bio/summary.tsv` | pipeline `bio`; `scripts/make_bio_source.py` | Inferences on complexes and pathways |
+| Table S10 | `rescue/summary.tsv`, `rescue/reference.tsv`, `rescue/table_s10.md` (from `tables/rescue.*.tsv.gz`) | pipeline `thin`, `rescue` (`scripts/pipeline/rescue.sh`); `scripts/make_rescue_source.py` | Perturbations with few cells |
 | Additional file 5 | `panels/xatlas/*.tsv` | `perturb-impute select` (`scripts/pipeline/xatlas_models.sh`) | Data availability |
 
 `scripts/make_source_data.py` writes `source_data/tables/` from the pipeline outputs, and `scripts/ms_numbers.py` writes `numbers.json`. File names in `tables/` are those of the pipeline outputs. Columns: `r_ceil` and `r_imp` are total correlations of the measured input half and of the imputed profile with the held-out half, `r_ceil_perp` and `r_imp_perp` the specific correlations, `r_den160_perp` the specific correlation of the profile projected on 160 programs, `oor` the out-of-reference score, `n_de`, `tp` and `disc` the numbers of DE genes, of calls with the correct sign and of calls with the opposite sign.
@@ -156,7 +169,8 @@ The steps below repeat the analyses from raw data. They need several tens of GB 
 6. X-Atlas/Orion. `orion-ingest` and `scripts/pipeline/xatlas_*.sh`, then `panelimp multi` and `panelimp vcm`.
 7. Alternative models and the guide-target prior. `panelimp explore`, `panelimp explore --stage test` for each fold and with `--target` for the other screens, and `panelimp causal` (optional Metal backend with `--features metal` on macOS), then `scripts/make_alt_source.py`.
 8. Inferences on complexes, pathways and strength. `panelimp bio` for each fold and with `--target` for the other screens, then `scripts/make_bio_source.py`.
-9. Numbers and figures. `scripts/ms_numbers.py`, `scripts/make_source_data.py`, then `make verify figures`.
+9. Perturbations with few cells and internal references. `scripts/pipeline/rescue.sh` (`panelimp folds` for the three other screens, `panelimp rescue` for each screen, `panelimp thin` and `panelimp rescue --thin` for the K562 essential-gene screen), then `scripts/make_rescue_source.py`.
+10. Numbers and figures. `scripts/ms_numbers.py`, `scripts/make_source_data.py`, then `make verify figures`.
 
 The usage of every pipeline subcommand is documented at the top of `src/main.rs`.
 

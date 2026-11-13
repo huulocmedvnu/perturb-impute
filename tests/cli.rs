@@ -151,3 +151,32 @@ fn guide_target_prior() {
     assert!(!o.status.success());
     std::fs::remove_dir_all(&dir).ok();
 }
+
+/// internal reference from the well-sampled perturbations, and measured profiles shrunk towards the projection
+#[test]
+fn internal_reference_and_shrinkage() {
+    let dir = std::env::temp_dir().join(format!("perturb_impute_cli_int_{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let (panel, model, proj, shr) = (dir.join("panel.tsv"), dir.join("model.bin"), dir.join("projected.tsv"), dir.join("shrunk.tsv"));
+    let (reference, ref_cells, input, cells) = (data("toy_reference.tsv"), data("toy_reference_cells.tsv"), data("toy_screen_input.tsv"), data("toy_screen_cells.tsv"));
+    let internal = ["--ref", reference.as_str(), "--min-cells", "150", "--ref-cells", ref_cells.as_str()];
+    run(&[&["select"], &internal[..], &["--panel-size", "40", "--out", s(&panel)]].concat());
+    run(&[&["fit-reference"], &internal[..], &["--panel", s(&panel), "--out", s(&model)]].concat());
+    run(&[&["project"], &internal[..], &["--input", &input, "--programs", "8", "--out", s(&proj)]].concat());
+    run(&[&["project"], &internal[..], &["--input", &input, "--programs", "8", "--shrink-by-cells", "--cells", &cells, "--out", s(&shr)]].concat());
+    let (x, p, z) = (matrix(&input), matrix(s(&proj)), matrix(s(&shr)));
+    let wt: Vec<(f64, f64)> = std::fs::read_to_string(format!("{}.weights.tsv", s(&shr))).unwrap().lines().skip(1).map(|l| { let f: Vec<&str> = l.split('\t').collect(); (f[1].parse().unwrap(), f[2].parse().unwrap()) }).collect();
+    assert_eq!(wt.len(), x.0.len());
+    // the weight of the measured profile lies between 0 and 1 and does not decrease with the number of cells
+    let mut o = wt.clone();
+    o.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    assert!(o.iter().all(|w| (0.0..=1.0).contains(&w.1)) && o.windows(2).all(|w| w[1].1 >= w[0].1 - 1e-9));
+    // shrunk profile = projection + weight x (measured - projection), gene by gene
+    for i in 0..x.0.len() {
+        for (j, name) in p.1.iter().enumerate() {
+            let xi = x.1.iter().position(|n| n == name).map(|c| x.2[i][c]).unwrap_or(0.0);
+            assert!((z.2[i][j] - (p.2[i][j] + wt[i].1 * (xi - p.2[i][j]))).abs() < 2e-3, "row {i} gene {name}");
+        }
+    }
+    std::fs::remove_dir_all(&dir).ok();
+}
